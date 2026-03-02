@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Bass Fretboard Interval Map</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="bass_intervals.css">
+<script src="fretboard.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+
+<div class="page">
+
+<div class="title-block">
+  <h1>Bass Guitar Reference</h1>
+  <h2>Interval Map</h2>
+</div>
+
+<div class="controls-row">
+  <div class="root-selector">
+    <span class="root-label">Root &rarr;</span>
+    <div class="note-buttons" id="noteButtons"></div>
+  </div>
+  <button class="btn btn-util" id="showAllBtn" onclick="toggleShowAll()">Show All</button>
+</div>
+
+<div class="fretboard-wrap">
+  <canvas id="fretboard" width="880" height="256"></canvas>
+  <div class="fret-tooltip" id="fretTooltip">
+    <span class="tt-name"></span>
+    <span class="tt-char"></span>
+  </div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="footer-note">Standard tuning &middot; 4-string &middot; Frets 0&ndash;12 &middot; Click a root note to map intervals</div>
+
+</div><!-- .page -->
+
+<script>
+var NOTE_ALT_MAP = {'C\u266f':'Db','D\u266f':'Eb','F\u266f':'Gb','G\u266f':'Ab','A\u266f':'Bb'};
+
+var rootNote = 4;   /* default: E */
+var showAll  = false;
+
+/* Canvas state */
+var fbCanvas, fbCtx, fbLayout;
+
+/* Pre-computed dot positions for hit-testing */
+var allDots = [];  /* [{ x, y, si, fi, noteIdx }] */
+
+/* ---- Init ---- */
+function initFretboard() {
+  fbCanvas = document.getElementById('fretboard');
+  fbCtx    = fbCanvas.getContext('2d');
+  fbLayout = makeNeckLayout(fbCanvas, {
+    numFrets:  13,
+    dotRadius: 14,
+    margins:   { L:56, R:18, T:36, B:32 }
+  });
+
+  /* Pre-compute positions (never change) */
+  allDots = [];
+  for (var si = 0; si < 4; si++) {
+    for (var fi = 0; fi < 13; fi++) {
+      allDots.push({
+        x:       fbLayout.fretX(fi),
+        y:       fbLayout.strY(si),
+        si:      si,
+        fi:      fi,
+        noteIdx: (BASS_OPEN[si] + fi) % 12
+      });
+    }
+  }
+
+  fbCanvas.addEventListener('mousemove', onNeckMouseMove);
+  fbCanvas.addEventListener('mouseleave', function() {
+    document.getElementById('fretTooltip').style.display = 'none';
+  });
+}
+
+/* ---- Draw ---- */
+function drawFretboard() {
+  drawNeck(fbCtx, fbLayout);
+  allDots.forEach(function(dp) {
+    var iv = (dp.noteIdx - rootNote + 12) % 12;
+    var d  = INTERVAL_DATA[iv];
+    var n  = NOTES[dp.noteIdx];
+    drawNoteDot(fbCtx, dp.x, dp.y, fbLayout.dotRadius, iv, d.sym, n);
+  });
+}
+
+/* ---- Hover tooltip ---- */
+function onNeckMouseMove(e) {
+  var rect = fbCanvas.getBoundingClientRect();
+  var scaleX = fbCanvas.width  / rect.width;
+  var scaleY = fbCanvas.height / rect.height;
+  var mx = (e.clientX - rect.left) * scaleX;
+  var my = (e.clientY - rect.top)  * scaleY;
+  var r  = fbLayout.dotRadius;
+
+  var hit = null;
+  for (var i = 0; i < allDots.length; i++) {
+    var dp = allDots[i];
+    var dx = mx - dp.x, dy = my - dp.y;
+    if (dx*dx + dy*dy <= r*r) { hit = dp; break; }
+  }
+
+  var tip = document.getElementById('fretTooltip');
+  if (hit) {
+    var iv = (hit.noteIdx - rootNote + 12) % 12;
+    var d  = INTERVAL_DATA[iv];
+    var noteName = NOTES[hit.noteIdx];
+    if (NOTE_ALT_MAP[noteName]) noteName += '/' + NOTE_ALT_MAP[noteName];
+    tip.querySelector('.tt-name').textContent = noteName + ' \u2014 ' + d.name;
+    tip.querySelector('.tt-char').textContent = d.char;
+    tip.style.display = 'block';
+    /* Position relative to the .fretboard-wrap */
+    var wrapRect = fbCanvas.parentElement.getBoundingClientRect();
+    tip.style.left = (e.clientX - wrapRect.left + 14) + 'px';
+    tip.style.top  = (e.clientY - wrapRect.top  - 52) + 'px';
+  } else {
+    tip.style.display = 'none';
+  }
+}
+
+/* ---- Root selection ---- */
+function setRoot(n) {
+  rootNote = n;
+  showAll  = false;
+  document.getElementById('showAllBtn').classList.remove('active');
+  document.querySelectorAll('.btn-note').forEach(function(b, i) {
+    b.classList.toggle('active', i === n);
+  });
+  drawFretboard();
+}
+
+function toggleShowAll() {
+  showAll = !showAll;
+  document.getElementById('showAllBtn').classList.toggle('active', showAll);
+  if (showAll) {
+    document.querySelectorAll('.btn-note').forEach(function(b) { b.classList.remove('active'); });
+  } else {
+    document.querySelectorAll('.btn-note').forEach(function(b, i) { b.classList.toggle('active', i === rootNote); });
+  }
+  drawFretboard();
+}
+
+/* ---- Build UI ---- */
+function buildNoteButtons() {
+  var c = document.getElementById('noteButtons');
+  NOTES.forEach(function(n, i) {
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-note' + (i === rootNote ? ' active' : '');
+    btn.textContent = n;
+    btn.onclick = function() { setRoot(i); };
+    c.appendChild(btn);
+  });
+}
+
+function buildLegend() {
+  var leg = document.getElementById('legend');
+  INTERVAL_DATA.forEach(function(iv) {
+    var item = document.createElement('div');
+    item.className = 'legend-entry';
+
+    var swatch = document.createElement('div');
+    swatch.className = 'legend-swatch iv-' + iv.hs;
+    swatch.textContent = iv.sym;
+
+    var txt = document.createElement('div');
+    txt.className = 'legend-text';
+    txt.innerHTML = '<div class="legend-name">' + iv.name + '</div>'
+                  + '<div class="legend-hs">' + iv.hs + ' half step' + (iv.hs !== 1 ? 's' : '') + '</div>'
+                  + '<div class="legend-char">' + iv.char + '</div>';
+
+    item.appendChild(swatch);
+    item.appendChild(txt);
+    leg.appendChild(item);
+  });
+}
+
+/* ---- Boot ---- */
+buildNoteButtons();
+buildLegend();
+initFretboard();
+drawFretboard();
+</script>
+
+</body>
+</html>

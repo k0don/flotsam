@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Intervals &ndash; Music Theory</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="intervals2.css">
+<script src="fretboard.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+
+<div class="page">
+
+<h1>Intervals</h1>
+<div class="subtitle">Music Theory Reference &middot; 13 Intervals</div>
+<div class="filters" id="filters"></div>
+<div class="section-label" id="section-label"></div>
+<div class="grid" id="grid"></div>
+
+</div><!-- .page -->
+
+<script>
+/* Quality colors from fretboard.js (Q_COLORS) — override "all" with a warm neutral */
+var QC = {
+  perfect: Q_COLORS.perfect,
+  major:   Q_COLORS.major,
+  minor:   Q_COLORS.minor,
+  tritone: Q_COLORS.tritone,
+  all:     IV_COLORS[9]    /* major 6th warm brown as the "all" accent */
+};
+
+/* Root key highlight uses the master root color */
+var ROOT_COLOR = IV_COLORS[0];
+
+var PAGE_INTERVALS = [
+  { s:0,  name:'Perfect Unison', abbr:'P1', q:'perfect', ratio:'1:1',   deg:1,   alt:'Prime',                   char:'Same pitch. Complete identity \u2014 no tension at all.',                                         ex:['C \u2192 C'],                     songs:['Any doubled note'] },
+  { s:1,  name:'Minor 2nd',      abbr:'m2', q:'minor',   ratio:'16:15', deg:2,   alt:'Half step / Semitone',    char:'Sharp, crunchy dissonance. Maximum tension. Creates urgency and unease.',                    ex:['C \u2192 D\u266d','E \u2192 F'],   songs:['Jaws theme','Beethoven 5th (opening)'] },
+  { s:2,  name:'Major 2nd',      abbr:'M2', q:'major',   ratio:'9:8',   deg:2,   alt:'Whole step / Whole tone', char:'Adjacent scale tones. Mild tension, wants to resolve. The building block of scales.',        ex:['C \u2192 D','D \u2192 E'],        songs:['Happy Birthday (opening)'] },
+  { s:3,  name:'Minor 3rd',      abbr:'m3', q:'minor',   ratio:'6:5',   deg:3,   alt:'Flat third',              char:'Dark, melancholic consonance. The soul of minor keys and the blues.',                         ex:['C \u2192 E\u266d','A \u2192 C'],   songs:['Smoke on the Water','Stairway to Heaven (riff)'] },
+  { s:4,  name:'Major 3rd',      abbr:'M3', q:'major',   ratio:'5:4',   deg:3,   alt:'',                        char:'Bright, stable consonance. The defining sound of major keys \u2014 warmth and optimism.',      ex:['C \u2192 E','G \u2192 B'],        songs:['When the Saints Go Marching In'] },
+  { s:5,  name:'Perfect 4th',    abbr:'P4', q:'perfect', ratio:'4:3',   deg:4,   alt:'',                        char:'Open, stable, slightly hollow. Powerful in bass lines. Inverts to a perfect 5th.',            ex:['C \u2192 F','G \u2192 C'],        songs:['Here Comes the Bride','Amazing Grace'] },
+  { s:6,  name:'Tritone',        abbr:'TT', q:'tritone', ratio:'45:32', deg:4.5, alt:'Diabolus in Musica',      char:'Maximum instability. Equal division of the octave. Tense, ambiguous \u2014 demands resolution.', ex:['C \u2192 F\u266f','B \u2192 F'],  songs:['The Simpsons theme','Black Sabbath (riff)'] },
+  { s:7,  name:'Perfect 5th',    abbr:'P5', q:'perfect', ratio:'3:2',   deg:5,   alt:'Power interval',          char:'The strongest consonance after the octave. Open, hollow, powerful. The basis of power chords.', ex:['C \u2192 G','G \u2192 D'],       songs:['Star Wars theme','Power chords in rock'] },
+  { s:8,  name:'Minor 6th',      abbr:'m6', q:'minor',   ratio:'8:5',   deg:6,   alt:'Aug. 5th (enharmonic)',   char:'Mournful, yearning quality. Emotionally powerful and less common than the major 6th.',         ex:['C \u2192 A\u266d','E \u2192 C'],   songs:['The Entertainer (2nd phrase)'] },
+  { s:9,  name:'Major 6th',      abbr:'M6', q:'major',   ratio:'5:3',   deg:6,   alt:'',                        char:'Warm, sweet consonance. Often paired with the 3rd. Inverts to a minor 3rd.',                  ex:['C \u2192 A','G \u2192 E'],        songs:['My Bonnie Lies Over the Ocean','NBC chime'] },
+  { s:10, name:'Minor 7th',      abbr:'m7', q:'minor',   ratio:'16:9',  deg:7,   alt:'Flat 7 / Dominant 7th',  char:'The bluesy, funky 7th. Key to dominant 7th chords and the blues. Tense without harshness.',   ex:['C \u2192 B\u266d','G \u2192 F'],   songs:['Somewhere (West Side Story)'] },
+  { s:11, name:'Major 7th',      abbr:'M7', q:'major',   ratio:'15:8',  deg:7,   alt:'Leading tone interval',  char:'Intense, yearning dissonance. One semitone below the octave \u2014 strong pull to resolve upward.', ex:['C \u2192 B','G \u2192 F\u266f'], songs:['Take On Me (A-ha)','Maj7 chords in jazz'] },
+  { s:12, name:'Perfect Octave', abbr:'P8', q:'perfect', ratio:'2:1',   deg:8,   alt:'Octave',                 char:'Same note, doubled frequency. Complete resolution. The destination. Bass lines walk toward this.', ex:['C \u2192 C (high)'],           songs:['Somewhere Over the Rainbow (opening)'] }
+];
+
+var WHITE_NOTES = ['C','D','E','F','G','A','B','C'];
+var BLACK_KEYS  = [
+  { pct:14.3, semitone:1  },
+  { pct:26.8, semitone:3  },
+  { pct:51.8, semitone:6  },
+  { pct:64.3, semitone:8  },
+  { pct:76.8, semitone:10 }
+];
+var S2K = {
+  0:{t:'w',i:0}, 1:{t:'b',i:0}, 2:{t:'w',i:1}, 3:{t:'b',i:1},
+  4:{t:'w',i:2}, 5:{t:'w',i:3}, 6:{t:'b',i:2}, 7:{t:'w',i:4},
+  8:{t:'b',i:3}, 9:{t:'w',i:5}, 10:{t:'b',i:4}, 11:{t:'w',i:6},
+  12:{t:'w',i:7}
+};
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function buildKeyboard(semitones, qc) {
+  var target = S2K[semitones];
+  var whites = '';
+  for (var i = 0; i < WHITE_NOTES.length; i++) {
+    var isRoot   = (i === 0);
+    var isTarget = target && target.t === 'w' && target.i === i && !isRoot;
+    var bg = isRoot ? ROOT_COLOR : isTarget ? qc : '#ddd9d0';
+    var tc = (isRoot || isTarget) ? (isRoot ? '#000' : '#e8e4dc') : '#555555';
+    whites += '<div class="kw" style="background:' + bg + '">'
+            + '<span class="kw-note" style="color:' + tc + '">' + WHITE_NOTES[i] + '</span>'
+            + '</div>';
+  }
+  var blacks = '';
+  for (var j = 0; j < BLACK_KEYS.length; j++) {
+    var bk    = BLACK_KEYS[j];
+    var isTgt = target && target.t === 'b' && bk.semitone === semitones;
+    blacks += '<div class="kb" style="left:' + bk.pct + '%;background:' + (isTgt ? qc : '') + '"></div>';
+  }
+  return '<div class="kbd-wrap">'
+       + '<div class="kbd-whites">' + whites + '</div>'
+       + '<div class="kbd-blacks">' + blacks + '</div>'
+       + '</div>';
+}
+
+function buildDots(semitones, qc) {
+  var html = '';
+  for (var i = 0; i < 12; i++) {
+    html += '<div class="dot" style="background:' + (i < semitones ? qc : '#2a2520') + '"></div>';
+  }
+  return html;
+}
+
+function buildCard(iv) {
+  var qc      = QC[iv.q];
+  var exTags  = iv.ex.map(function(e) { return '<span class="tag">' + esc(e) + '</span>'; }).join('');
+  var songTags = iv.songs.map(function(s) {
+    return '<span class="tag-song" style="border-color:' + qc + '">' + esc(s) + '</span>';
+  }).join('');
+  var altHtml = iv.alt ? '<div class="alt-name">' + esc(iv.alt) + '</div>' : '';
+
+  /* Badge: dark background, light text derived from quality color */
+  var badgeTx = IV_TEXT[Math.max(0, iv.s % 12)] || '#e8e4dc';
+
+  return '<div class="card" style="border-top:3px solid ' + qc + '" onclick="toggle(' + iv.s + ')">'
+    + '<div class="card-head">'
+      + '<div>'
+        + '<div class="semitones-num" style="color:' + qc + '">' + iv.s + '</div>'
+        + '<div class="semitones-lbl">semitones</div>'
+      + '</div>'
+      + '<div class="name-col">'
+        + '<div class="iname">' + esc(iv.name) + '</div>'
+        + altHtml
+        + '<div class="badge" style="background:' + qc + ';color:' + badgeTx + '">' + iv.q + '</div>'
+      + '</div>'
+      + '<div class="abbr-col" style="color:' + qc + '">' + iv.abbr + '</div>'
+    + '</div>'
+    + '<div class="dotbar">' + buildDots(iv.s, qc) + '</div>'
+    + '<div class="details" id="d' + iv.s + '">'
+      + '<hr class="divider" style="margin-top:14px">'
+      + '<div class="meta-row">'
+        + '<div><div class="meta-lbl">Ratio</div><div class="meta-val">' + iv.ratio + '</div></div>'
+        + '<div><div class="meta-lbl">Scale degree</div><div class="meta-val">' + iv.deg + '</div></div>'
+      + '</div>'
+      + '<div class="character">' + esc(iv.char) + '</div>'
+      + '<div class="tags-lbl">From C</div><div class="tags">' + exTags + '</div>'
+      + '<div class="tags-lbl">Recognizable in</div><div class="tags">' + songTags + '</div>'
+      + buildKeyboard(iv.s, qc)
+    + '</div>'
+    + '<div class="toggle-hint" id="h' + iv.s + '">\u25bc more</div>'
+  + '</div>';
+}
+
+var activeFilter = 'all';
+var expanded     = null;
+
+function render() {
+  var list = (activeFilter === 'all')
+    ? PAGE_INTERVALS
+    : PAGE_INTERVALS.filter(function(i) { return i.q === activeFilter; });
+
+  document.getElementById('section-label').textContent =
+    list.length + ' interval' + (list.length !== 1 ? 's' : '') + ' \u2014 tap to expand';
+
+  var html = '';
+  for (var i = 0; i < list.length; i++) html += buildCard(list[i]);
+  document.getElementById('grid').innerHTML = html;
+
+  if (expanded !== null) {
+    var el = document.getElementById('d' + expanded);
+    var h  = document.getElementById('h' + expanded);
+    if (el) { el.classList.add('open'); h.textContent = '\u25b2 less'; }
+  }
+}
+
+function toggle(s) {
+  expanded = (expanded === s) ? null : s;
+  render();
+  if (expanded !== null) {
+    var el = document.getElementById('d' + expanded);
+    if (el) setTimeout(function() { el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }, 60);
+  }
+}
+
+function setFilter(q) {
+  activeFilter = q;
+  expanded     = null;
+  document.querySelectorAll('.btn-filter').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-q') === q);
+  });
+  render();
+}
+
+/* Build filter buttons */
+var filterDefs = [
+  { q:'all',     label:'All'     },
+  { q:'perfect', label:'Perfect' },
+  { q:'major',   label:'Major'   },
+  { q:'minor',   label:'Minor'   },
+  { q:'tritone', label:'Tritone' }
+];
+var filtersHtml = '';
+for (var fi = 0; fi < filterDefs.length; fi++) {
+  var fd = filterDefs[fi];
+  filtersHtml += '<button class="btn btn-filter" data-q="' + fd.q + '" onclick="setFilter(\'' + fd.q + '\')">'
+               + fd.label + '</button>';
+}
+document.getElementById('filters').innerHTML = filtersHtml;
+
+setFilter('all');
+</script>
+
+</body>
+</html>

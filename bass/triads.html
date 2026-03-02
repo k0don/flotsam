@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Bass Triad Explorer</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="triads.css">
+<script src="fretboard.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>Bass Triad Explorer</h1>
+    <p>All shapes &middot; All positions &middot; All 12 keys</p>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <div class="control-label">Root Note</div>
+      <div class="btn-row" id="rootBtns"></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label">Triad Type</div>
+      <div class="btn-row" id="typeBtns"></div>
+    </div>
+    <div class="control-group">
+      <div class="control-label">Labels</div>
+      <div class="btn-row">
+        <button class="btn btn-util active" id="labelToggle" onclick="toggleLabel()">Intervals</button>
+        <button class="btn btn-clear" onclick="clearShape()">&times; Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    Select a shape card below to highlight its fingering on the neck.
+  </div>
+
+  <div class="neck-wrap">
+    <canvas id="neck" width="940" height="232"></canvas>
+    <div class="legend-row" style="margin-top:12px" id="neckLegend">
+      <div class="legend-item">
+        <div class="legend-dot iv-0" id="legendDot0">R</div>
+        <span id="legendR">Root</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legendDot1">3</div>
+        <span id="legend3">Major 3rd</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot" id="legendDot2">5</div>
+        <span id="legend5">Perfect 5th</span>
+      </div>
+      <div class="legend-right">Click a shape card to highlight a specific fingering</div>
+    </div>
+  </div>
+
+  <div id="shapeSections"></div>
+
+</div><!-- .page -->
+
+<script>
+/* ---- Triad-specific data (renamed to avoid colliding with fretboard.js globals) ---- */
+var FRETS     = 16;
+var MAX_FRET  = 15;
+var FRET_MARKS_EXT = [15];   /* fret 15 marker beyond the shared FB_FRET_MARKS */
+
+var TRIAD_INTERVALS = { major:[0,4,7], minor:[0,3,7], dim:[0,3,6], aug:[0,4,8] };
+var INT_LABELS = {
+  major:['R','3','5'], minor:['R','b3','5'],
+  dim:  ['R','b3','b5'], aug:['R','3','#5']
+};
+var INT_NAMES = [
+  ['Root','Major 3rd','Perfect 5th'],
+  ['Root','Minor 3rd','Perfect 5th'],
+  ['Root','Minor 3rd','Dim. 5th'],
+  ['Root','Major 3rd','Aug. 5th']
+];
+var TYPE_KEYS  = ['major','minor','dim','aug'];
+var TYPE_NAMES = ['Major','Minor','Dim','Aug'];
+
+/* INT_COLORS: per-role colors computed from IV_COLORS for the current type */
+function getIntColors() {
+  return TRIAD_INTERVALS[selType].map(function(i) { return IV_COLORS[i]; });
+}
+
+var SHAPES = [
+  {cat:'3s',  type:'major',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:4,li:1},{d:2,i:7,li:2}]},
+  {cat:'3s',  type:'major',inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:1,i:7,li:2},{d:2,i:12,li:0}]},
+  {cat:'3s',  type:'major',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:1,i:12,li:0},{d:2,i:16,li:1}]},
+  {cat:'3s',  type:'minor',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:3,li:1},{d:2,i:7,li:2}]},
+  {cat:'3s',  type:'minor',inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:1,i:7,li:2},{d:2,i:12,li:0}]},
+  {cat:'3s',  type:'minor',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:1,i:12,li:0},{d:2,i:15,li:1}]},
+  {cat:'3s',  type:'dim',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:3,li:1},{d:2,i:6,li:2}]},
+  {cat:'3s',  type:'dim',  inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:1,i:6,li:2},{d:2,i:12,li:0}]},
+  {cat:'3s',  type:'dim',  inv:'2nd Inv.', ai:6, notes:[{d:0,i:6,li:2},{d:1,i:12,li:0},{d:2,i:15,li:1}]},
+  {cat:'3s',  type:'aug',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:4,li:1},{d:2,i:8,li:2}]},
+  {cat:'3s',  type:'aug',  inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:1,i:8,li:2},{d:2,i:12,li:0}]},
+  {cat:'3s',  type:'aug',  inv:'2nd Inv.', ai:8, notes:[{d:0,i:8,li:2},{d:1,i:12,li:0},{d:2,i:16,li:1}]},
+  {cat:'1l2h',type:'major',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:4,li:1},{d:1,i:7,li:2}]},
+  {cat:'1l2h',type:'major',inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:1,i:7,li:2},{d:1,i:12,li:0}]},
+  {cat:'1l2h',type:'major',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:1,i:12,li:0},{d:1,i:16,li:1}]},
+  {cat:'1l2h',type:'minor',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:3,li:1},{d:1,i:7,li:2}]},
+  {cat:'1l2h',type:'minor',inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:1,i:7,li:2},{d:1,i:12,li:0}]},
+  {cat:'1l2h',type:'minor',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:1,i:12,li:0},{d:1,i:15,li:1}]},
+  {cat:'1l2h',type:'dim',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:3,li:1},{d:1,i:6,li:2}]},
+  {cat:'1l2h',type:'dim',  inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:1,i:6,li:2},{d:1,i:12,li:0}]},
+  {cat:'1l2h',type:'dim',  inv:'2nd Inv.', ai:6, notes:[{d:0,i:6,li:2},{d:1,i:12,li:0},{d:1,i:15,li:1}]},
+  {cat:'1l2h',type:'aug',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:1,i:4,li:1},{d:1,i:8,li:2}]},
+  {cat:'1l2h',type:'aug',  inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:1,i:8,li:2},{d:1,i:12,li:0}]},
+  {cat:'1l2h',type:'aug',  inv:'2nd Inv.', ai:8, notes:[{d:0,i:8,li:2},{d:1,i:12,li:0},{d:1,i:16,li:1}]},
+  {cat:'2l1h',type:'major',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:0,i:4,li:1},{d:1,i:7,li:2}]},
+  {cat:'2l1h',type:'major',inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:0,i:7,li:2},{d:1,i:12,li:0}]},
+  {cat:'2l1h',type:'major',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:0,i:12,li:0},{d:1,i:16,li:1}]},
+  {cat:'2l1h',type:'minor',inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:0,i:3,li:1},{d:1,i:7,li:2}]},
+  {cat:'2l1h',type:'minor',inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:0,i:7,li:2},{d:1,i:12,li:0}]},
+  {cat:'2l1h',type:'minor',inv:'2nd Inv.', ai:7, notes:[{d:0,i:7,li:2},{d:0,i:12,li:0},{d:1,i:15,li:1}]},
+  {cat:'2l1h',type:'dim',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:0,i:3,li:1},{d:1,i:6,li:2}]},
+  {cat:'2l1h',type:'dim',  inv:'1st Inv.', ai:3, notes:[{d:0,i:3,li:1},{d:0,i:6,li:2},{d:1,i:12,li:0}]},
+  {cat:'2l1h',type:'dim',  inv:'2nd Inv.', ai:6, notes:[{d:0,i:6,li:2},{d:0,i:12,li:0},{d:1,i:15,li:1}]},
+  {cat:'2l1h',type:'aug',  inv:'Root Pos.',ai:0, notes:[{d:0,i:0,li:0},{d:0,i:4,li:1},{d:1,i:8,li:2}]},
+  {cat:'2l1h',type:'aug',  inv:'1st Inv.', ai:4, notes:[{d:0,i:4,li:1},{d:0,i:8,li:2},{d:1,i:12,li:0}]},
+  {cat:'2l1h',type:'aug',  inv:'2nd Inv.', ai:8, notes:[{d:0,i:8,li:2},{d:0,i:12,li:0},{d:1,i:16,li:1}]},
+];
+
+/* ---- Canvas setup (using shared makeNeckLayout) ---- */
+var selRoot = 0, selType = 'major', showNames = false, activeShape = null;
+
+var neckCanvas  = document.getElementById('neck');
+var nctx        = neckCanvas.getContext('2d');
+var neckLayout  = makeNeckLayout(neckCanvas, {
+  numFrets:  FRETS,
+  dotRadius: 13,
+  margins:   { L:52, R:18, T:40, B:44 }
+});
+
+/* Convenience aliases for legacy helper functions below */
+function fretX(f) { return neckLayout.fretX(f); }
+function strY(s)  { return neckLayout.strY(s);  }
+var DOT_R = neckLayout.dotRadius;
+
+/* ---- Neck rendering ---- */
+function renderNeck() {
+  /* Draw static neck using shared utility */
+  drawNeck(nctx, neckLayout, {
+    showOpenLabel:  true,
+    extraFretMarks: FRET_MARKS_EXT
+  });
+
+  /* Shape highlight overlay */
+  if (activeShape) findInstances(activeShape).forEach(function(inst) { drawHighlight(inst); });
+
+  /* Note dots for current triad */
+  var intColors = getIntColors();
+  var triadPCs  = TRIAD_INTERVALS[selType].map(function(i) { return (selRoot + i) % 12; });
+  for (var s = 0; s < 4; s++) {
+    for (var fret = 0; fret < FRETS; fret++) {
+      var pc = (BASS_OPEN[s] + fret) % 12;
+      var ii = triadPCs.indexOf(pc);
+      if (ii >= 0) drawTriadDot(s, fret, ii, intColors);
+    }
+  }
+}
+
+/* Triad-specific dot: root is solid, non-roots are semi-transparent */
+function drawTriadDot(s, f, intIdx, intColors) {
+  var x      = fretX(f), y = strY(s);
+  var ivIdx  = TRIAD_INTERVALS[selType][intIdx];
+  var col    = intColors[intIdx];
+  var bd     = IV_BORDER[ivIdx];
+  var tx     = IV_TEXT[ivIdx];
+  var isRoot = (intIdx === 0);
+  var label  = showNames ? NOTES[(BASS_OPEN[s]+f)%12] : INT_LABELS[selType][intIdx];
+
+  if (isRoot) {
+    var grd = nctx.createRadialGradient(x, y, 0, x, y, DOT_R * 2.4);
+    grd.addColorStop(0, col + '48'); grd.addColorStop(1, 'transparent');
+    nctx.beginPath(); nctx.arc(x, y, DOT_R * 2.4, 0, Math.PI * 2);
+    nctx.fillStyle = grd; nctx.fill();
+  }
+
+  nctx.beginPath(); nctx.arc(x, y, DOT_R, 0, Math.PI * 2);
+  nctx.fillStyle   = col;
+  nctx.strokeStyle = bd;
+  nctx.lineWidth   = isRoot ? 2 : 1.5;
+  nctx.fill(); nctx.stroke();
+
+  var sm = label && label.length > 1;
+  nctx.font = (isRoot ? '700' : '600') + ' ' + (sm ? '10' : '12') + 'px -apple-system,"Helvetica Neue",Arial,sans-serif';
+  nctx.textAlign = 'center'; nctx.textBaseline = 'middle';
+  nctx.fillStyle = tx;
+  nctx.fillText(label, x, y + 0.5);
+}
+
+/* ---- Shape highlight overlay ---- */
+function drawHighlight(inst) {
+  var col   = TYPE_COLORS[selType];
+  var byStr = {};
+  inst.forEach(function(p) { (byStr[p.s] = byStr[p.s] || []).push(p); });
+
+  Object.keys(byStr).forEach(function(k) {
+    var grp = byStr[k];
+    if (grp.length < 2) return;
+    grp.sort(function(a,b) { return a.f - b.f; });
+    var gy = strY(grp[0].s);
+    var x1 = fretX(grp[0].f), x2 = fretX(grp[1].f);
+    nctx.beginPath();
+    nctx.moveTo(x1, gy - DOT_R - 2);
+    nctx.quadraticCurveTo((x1+x2)/2, gy - DOT_R * 3.5, x2, gy - DOT_R - 2);
+    nctx.strokeStyle = col + '90'; nctx.lineWidth = 2; nctx.stroke();
+  });
+
+  var seen = {}, unique = [];
+  inst.forEach(function(p) {
+    var key = p.s + ':' + p.f;
+    if (!seen[key]) { seen[key] = true; unique.push(p); }
+  });
+
+  if (unique.length >= 2) {
+    var sorted = unique.slice().sort(function(a,b) { return b.s - a.s || a.f - b.f; });
+    nctx.beginPath();
+    sorted.forEach(function(p, i) {
+      var px = fretX(p.f), py = strY(p.s);
+      if (i === 0) nctx.moveTo(px, py); else nctx.lineTo(px, py);
+    });
+    if (unique.length === 3) nctx.closePath();
+    nctx.fillStyle = col + '18'; nctx.fill();
+    nctx.strokeStyle = col + '55'; nctx.lineWidth = 1.5; nctx.stroke();
+  }
+
+  var xs = inst.map(function(p) { return fretX(p.f); });
+  var ys = inst.map(function(p) { return strY(p.s); });
+  var pad = DOT_R + 7;
+  var bx  = Math.min.apply(null,xs) - pad;
+  var by  = Math.min.apply(null,ys) - pad;
+  var bw  = Math.max.apply(null,xs) - Math.min.apply(null,xs) + pad*2;
+  var bh  = Math.max.apply(null,ys) - Math.min.apply(null,ys) + pad*2;
+  nctx.beginPath(); roundRect(nctx, bx, by, bw, bh, 8);
+  nctx.fillStyle = col + '12'; nctx.fill();
+  nctx.strokeStyle = col + '58'; nctx.lineWidth = 2; nctx.stroke();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+
+/* ---- findInstances ---- */
+function findInstances(shape) {
+  var instances = [];
+  var anchorPC  = (selRoot + shape.ai) % 12;
+  var maxD      = Math.max.apply(null, shape.notes.map(function(n) { return n.d; }));
+  for (var baseStr = 3; baseStr >= maxD; baseStr--) {
+    var openNote = BASS_OPEN[baseStr];
+    for (var oct = 0; oct <= 1; oct++) {
+      var af = (anchorPC - openNote + 12) % 12 + oct * 12;
+      if (af > MAX_FRET) continue;
+      var positions = shape.notes.map(function(n) {
+        return { s: baseStr - n.d, f: af + (n.i - shape.ai) - n.d*5, li: n.li };
+      });
+      if (positions.every(function(p) { return p.f >= 0 && p.f <= MAX_FRET && p.s >= 0 && p.s <= 3; }))
+        instances.push(positions);
+    }
+  }
+  return instances;
+}
+
+/* ---- Mini card drawing ---- */
+function drawMiniCard(canvas, shape, typeKey, isActive) {
+  var ctx = canvas.getContext('2d');
+  var W   = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  var col       = TYPE_COLORS[typeKey];
+  var intColors = TRIAD_INTERVALS[typeKey].map(function(i) { return IV_COLORS[i]; });
+
+  ctx.fillStyle = '#231f1a';
+  ctx.fillRect(0, 0, W, H);
+
+  var offsets  = shape.notes.map(function(n) { return (n.i - shape.ai) - n.d*5; });
+  var minOff   = Math.min.apply(null, offsets);
+  var maxOff   = Math.max.apply(null, offsets);
+  var totalFrets = Math.max(maxOff - minOff + 2, 5);
+  var maxD     = Math.max.apply(null, shape.notes.map(function(n) { return n.d; }));
+
+  var Lm=12, Rm=12, Tm=12, Bm=12;
+  var fw = (W-Lm-Rm) / totalFrets;
+  function fxM(off) { return Lm + (off - minOff + 0.5) * fw; }
+  var sh  = maxD > 0 ? (H-Tm-Bm) / maxD : H-Tm-Bm;
+  function syM(d) { return H - Bm - d * sh; }
+
+  /* Alternating column shading */
+  for (var ci = 0; ci < totalFrets; ci++) {
+    ctx.fillStyle = ci % 2 === 0 ? '#382f1e' : '#201c17';
+    ctx.fillRect(Lm + ci * fw, Tm - 4, fw, H - Bm + 4 - (Tm - 4));
+  }
+  if (isActive) {
+    ctx.fillStyle = col + '18';
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  for (var i = 0; i <= totalFrets; i++) {
+    var fx2 = Lm + i*fw;
+    ctx.beginPath(); ctx.moveTo(fx2, Tm-4); ctx.lineTo(fx2, H-Bm+4);
+    ctx.strokeStyle = '#7078a0'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  var thkMap  = [3.2, 2.2, 1.4, 1.0];
+  /* Aurora burst: d=0 is lowest/thickest string (deep amber) → d=3 highest/thinnest (bright gold) */
+  var strColM = ['#826020','#9a7832','#b29044','#c8a85c'];
+  for (var d = 0; d <= maxD; d++) {
+    var sy2 = syM(d);
+    ctx.beginPath(); ctx.moveTo(Lm, sy2); ctx.lineTo(W-Rm, sy2);
+    ctx.strokeStyle = strColM[d] || '#302a22'; ctx.lineWidth = thkMap[d] || 1; ctx.stroke();
+  }
+
+  var byD = {};
+  shape.notes.forEach(function(n, idx) {
+    var off = offsets[idx];
+    (byD[n.d] = byD[n.d] || []).push({ off:off, li:n.li });
+  });
+  Object.keys(byD).forEach(function(dk) {
+    var grp = byD[dk];
+    if (grp.length < 2) return;
+    grp.sort(function(a,b) { return a.off-b.off; });
+    var gy2 = syM(+dk), x1 = fxM(grp[0].off), x2 = fxM(grp[1].off);
+    ctx.beginPath(); ctx.moveTo(x1, gy2-8); ctx.quadraticCurveTo((x1+x2)/2, gy2-20, x2, gy2-8);
+    ctx.strokeStyle = col + '70'; ctx.lineWidth = 1.5; ctx.stroke();
+  });
+
+  var DR = 9;
+  shape.notes.forEach(function(n, idx) {
+    var ivIdx = TRIAD_INTERVALS[typeKey][n.li];
+    var dotCol = intColors[n.li];
+    var bd2    = IV_BORDER[ivIdx];
+    var tx2    = IV_TEXT[ivIdx];
+    var isR    = (n.li === 0);
+    var x3 = fxM(offsets[idx]), y3 = syM(n.d);
+    ctx.beginPath(); ctx.arc(x3, y3, DR, 0, Math.PI * 2);
+    ctx.fillStyle   = dotCol;
+    ctx.strokeStyle = bd2;
+    ctx.lineWidth   = isR ? 1.5 : 1;
+    ctx.fill(); ctx.stroke();
+    var lbl = INT_LABELS[typeKey][n.li], sm = lbl.length > 1;
+    ctx.font = (isR ? '700' : '600') + ' ' + (sm ? '8.5' : '11') + 'px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = tx2;
+    ctx.fillText(lbl, x3, y3 + 0.5);
+  });
+
+  ctx.strokeStyle = isActive ? col + '80' : '#42372f';
+  ctx.lineWidth   = isActive ? 2 : 1;
+  ctx.strokeRect(0.5, 0.5, W-1, H-1);
+}
+
+/* ---- UI builders ---- */
+function buildRootBtns() {
+  var c = document.getElementById('rootBtns');
+  NOTES.forEach(function(note, i) {
+    var b = document.createElement('button');
+    b.className = 'btn btn-root' + (i === selRoot ? ' active' : '');
+    b.textContent = note;
+    b.onclick = function() { selRoot = i; updateAll(); };
+    c.appendChild(b);
+  });
+}
+
+function buildTypeBtns() {
+  var c = document.getElementById('typeBtns');
+  TYPE_KEYS.forEach(function(t, i) {
+    var b = document.createElement('button');
+    b.className = 'btn btn-type' + (t === selType ? ' active' : '');
+    b.textContent = TYPE_NAMES[i];
+    b.dataset.type = t;
+    b.onclick = function() { selType = t; activeShape = null; updateAll(); };
+    c.appendChild(b);
+  });
+}
+
+var CAT_INFO = [
+  { key:'3s',   label:'3-String Shapes', sub:'One note per string' },
+  { key:'1l2h', label:'1 Low \u00b7 2 High',  sub:'One note low, two on upper string' },
+  { key:'2l1h', label:'2 Low \u00b7 1 High',  sub:'Two notes on lower string, one high' },
+];
+
+function buildShapeSections() {
+  var container = document.getElementById('shapeSections');
+  container.innerHTML = '';
+  var col = TYPE_COLORS[selType];
+  CAT_INFO.forEach(function(cat) {
+    var sec   = document.createElement('div'); sec.className = 'shape-section';
+    var title = document.createElement('div'); title.className = 'section-divider';
+    title.innerHTML = cat.label + '<span>' + cat.sub + '</span>';
+    sec.appendChild(title);
+    var grid  = document.createElement('div'); grid.className = 'shape-grid';
+
+    SHAPES.filter(function(s) { return s.cat === cat.key && s.type === selType; }).forEach(function(shape) {
+      var isAct = (activeShape === shape);
+      var card  = document.createElement('div');
+      card.className = 'shape-card' + (isAct ? ' active' : '');
+      if (isAct) card.style.borderColor = col + '60';
+
+      var lbl = document.createElement('div'); lbl.className = 'card-label';
+      if (isAct) lbl.style.color = col;
+      lbl.textContent = shape.inv;
+      card.appendChild(lbl);
+
+      var canv = document.createElement('canvas');
+      canv.width  = 210;
+      canv.height = cat.key === '3s' ? 90 : 68;
+      card.appendChild(canv);
+      drawMiniCard(canv, shape, selType, isAct);
+
+      var notesEl = document.createElement('div'); notesEl.className = 'card-notes';
+      notesEl.textContent = buildNoteOrder(shape);
+      card.appendChild(notesEl);
+
+      card.onclick = function() {
+        activeShape = (activeShape === shape) ? null : shape;
+        buildShapeSections(); updateStatus(); renderNeck();
+      };
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    container.appendChild(sec);
+  });
+}
+
+function buildNoteOrder(shape) {
+  var offsets = shape.notes.map(function(n) { return (n.i - shape.ai) - n.d*5; });
+  var sorted  = shape.notes.map(function(n, i) {
+    return { key: n.d*100 + offsets[i], label: INT_LABELS[selType][n.li] };
+  }).sort(function(a,b) { return a.key - b.key; });
+  return 'Low \u2192 High:  ' + sorted.map(function(x) { return x.label; }).join(' \u203a ');
+}
+
+/* ---- Update legend dots to match current type ---- */
+function updateLegend() {
+  var ti        = TYPE_KEYS.indexOf(selType);
+  var ivIndices = TRIAD_INTERVALS[selType]; /* e.g. [0,4,7] */
+  var names     = INT_NAMES[ti];
+
+  /* Dot 0 (root) always uses iv-0 CSS class — no change needed */
+  document.getElementById('legendR').textContent = 'Root (' + NOTES[selRoot] + ')';
+
+  /* Dots 1 and 2 apply inline color from IV_COLORS */
+  [1, 2].forEach(function(pos) {
+    var dot = document.getElementById('legendDot' + pos);
+    var ivIdx = ivIndices[pos];
+    dot.style.background = IV_COLORS[ivIdx] + '55';
+    dot.style.border     = '1.5px solid ' + IV_COLORS[ivIdx] + '99';
+    dot.style.color      = IV_COLORS[ivIdx];
+  });
+  document.getElementById('legend3').textContent = names[1];
+  document.getElementById('legend5').textContent = names[2];
+}
+
+/* ---- updateAll + status ---- */
+function updateAll() {
+  document.querySelectorAll('.btn-root').forEach(function(b, i) { b.classList.toggle('active', i === selRoot); });
+  document.querySelectorAll('.btn-type').forEach(function(b) { b.classList.toggle('active', b.dataset.type === selType); });
+  updateLegend();
+  buildShapeSections(); updateStatus(); renderNeck();
+}
+
+function updateStatus() {
+  var bar = document.getElementById('statusBar');
+  var rn  = NOTES[selRoot], tn = TYPE_NAMES[TYPE_KEYS.indexOf(selType)];
+  var col = TYPE_COLORS[selType];
+  if (activeShape) {
+    var n  = findInstances(activeShape).length;
+    var cn = activeShape.cat === '3s' ? '3-string' : activeShape.cat === '1l2h' ? '1 low / 2 high' : '2 low / 1 high';
+    bar.innerHTML = 'Showing <strong style="color:' + col + '">' + rn + ' ' + tn + '</strong> &nbsp;&middot;&nbsp; <strong>' + cn + ' &middot; ' + activeShape.inv + '</strong> &nbsp;&middot;&nbsp; <em>' + n + ' instance' + (n !== 1 ? 's' : '') + '</em>';
+  } else {
+    var notes = TRIAD_INTERVALS[selType].map(function(i) { return NOTES[(selRoot+i)%12]; });
+    bar.innerHTML = 'All <strong style="color:' + col + '">' + rn + ' ' + tn + '</strong> positions &nbsp;&middot;&nbsp; <em>' + notes.join(' \u2013 ') + '</em> &nbsp;&middot;&nbsp; click a shape card to highlight a fingering';
+  }
+}
+
+function toggleLabel() {
+  showNames = !showNames;
+  document.getElementById('labelToggle').textContent = showNames ? 'Note Names' : 'Intervals';
+  renderNeck();
+}
+
+function clearShape() {
+  activeShape = null;
+  buildShapeSections(); updateStatus(); renderNeck();
+}
+
+/* ---- Boot ---- */
+buildRootBtns(); buildTypeBtns(); updateAll();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,351 @@
+/* ================================================================
+   styles.css — shared styles for the bass/ reference site
+   ================================================================ */
+
+/* ---- CSS Custom Properties ---- */
+:root {
+  /* 12-semitone interval palette (master colors) */
+  --iv-0-bg:  #c8a84a; --iv-0-bd: #e8c860; --iv-0-tx: #000;
+  --iv-1-bg:  #8b1a1a; --iv-1-bd: #b02020; --iv-1-tx: #ffaaaa;
+  --iv-2-bg:  #6b3a0a; --iv-2-bd: #9a5a18; --iv-2-tx: #ffc878;
+  --iv-3-bg:  #1a3a7a; --iv-3-bd: #2a5ab0; --iv-3-tx: #a0c8ff;
+  --iv-4-bg:  #6a7a0a; --iv-4-bd: #9ab010; --iv-4-tx: #e8f080;
+  --iv-5-bg:  #1a5a2a; --iv-5-bd: #2a8a40; --iv-5-tx: #80f0a0;
+  --iv-6-bg:  #5a0a7a; --iv-6-bd: #8a18b0; --iv-6-tx: #e080ff;
+  --iv-7-bg:  #0a6a3a; --iv-7-bd: #18a060; --iv-7-tx: #60ffc0;
+  --iv-8-bg:  #1a4a5a; --iv-8-bd: #2a7a8a; --iv-8-tx: #80d8f0;
+  --iv-9-bg:  #5a4a1a; --iv-9-bd: #8a7030; --iv-9-tx: #f0d080;
+  --iv-10-bg: #1a5a5a; --iv-10-bd: #208888; --iv-10-tx: #80f0f0;
+  --iv-11-bg: #5a1a4a; --iv-11-bd: #882878; --iv-11-tx: #f080d8;
+
+  /* Quality color aliases */
+  --q-perfect: #0a6a3a;
+  --q-major:   #6a7a0a;
+  --q-minor:   #1a3a7a;
+  --q-tritone: #5a0a7a;
+
+  /* Triad type color aliases */
+  --t-major: #6a7a0a;
+  --t-minor: #1a3a7a;
+  --t-dim:   #8b1a1a;
+  --t-aug:   #5a4a1a;
+
+  /* Site palette */
+  --bg:           #1c1a1a;
+  --bg-raised:    #242019;
+  --bg-card:      #28231f;
+  --bg-input:     #2d2823;
+  --text:         #e2ddd4;
+  --text-muted:   #8e8678;
+  --text-dim:     #6e665e;
+  --border:       #38332d;
+  --border-sub:   #302c27;
+
+  /* Spacing scale */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ---- Base ---- */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+}
+
+/* ---- Navigation ---- */
+.site-nav {
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--s5);
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: var(--s2);
+  height: 44px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-nav .nav-brand {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: var(--s3);
+  text-decoration: none;
+}
+
+.site-nav .nav-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 5px var(--s3);
+  border-radius: 3px;
+  transition: color 0.12s, background 0.12s;
+  letter-spacing: 0.02em;
+}
+
+.site-nav .nav-link:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
+.site-nav .nav-link.active {
+  color: var(--text);
+  background: var(--border);
+  font-weight: 600;
+}
+
+/* ---- Page Container ---- */
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--s6) var(--s5) 60px;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.88em;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  border-color: #4e4840;
+  color: var(--text);
+  background: #38322c;
+}
+
+/* Active state: base (overridden by data-* variants below) */
+.btn.active {
+  font-weight: 700;
+  border-color: transparent;
+}
+
+/* Root note buttons */
+.btn.btn-root {
+  min-width: 38px;
+  text-align: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  padding: 6px 4px;
+}
+.btn.btn-root.active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+}
+
+/* Note selector buttons (bass_intervals page) */
+.btn.btn-note {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+}
+.btn.btn-note.active {
+  background: var(--iv-0-bg);
+  border-color: var(--iv-0-bd);
+  color: var(--iv-0-tx);
+  box-shadow: 0 0 12px rgba(200,168,74,0.4);
+}
+
+/* Utility / text buttons (show-all, labels toggle, clear) */
+.btn.btn-util {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+}
+.btn.btn-util.active {
+  background: var(--bg-input);
+  border-color: var(--iv-0-bg);
+  color: var(--iv-0-bg);
+  font-weight: 500;
+}
+
+/* Triad type buttons */
+.btn.btn-type.active[data-type="major"] { background: var(--t-major); border-color: var(--t-major); color: #e8f080; }
+.btn.btn-type.active[data-type="minor"] { background: var(--t-minor); border-color: var(--t-minor); color: #a0c8ff; }
+.btn.btn-type.active[data-type="dim"]   { background: var(--t-dim);   border-color: var(--t-dim);   color: #ffaaaa; }
+.btn.btn-type.active[data-type="aug"]   { background: var(--t-aug);   border-color: var(--t-aug);   color: #f0d080; }
+
+/* Filter buttons (intervals2 page) */
+.btn.btn-filter.active[data-q="all"]     { background: var(--iv-9-bg);   border-color: var(--iv-9-bd);   color: var(--iv-9-tx); }
+.btn.btn-filter.active[data-q="perfect"] { background: var(--q-perfect); border-color: var(--q-perfect); color: #80f0c0; }
+.btn.btn-filter.active[data-q="major"]   { background: var(--q-major);   border-color: var(--q-major);   color: #e8f080; }
+.btn.btn-filter.active[data-q="minor"]   { background: var(--q-minor);   border-color: var(--q-minor);   color: #a0c8ff; }
+.btn.btn-filter.active[data-q="tritone"] { background: var(--q-tritone); border-color: var(--q-tritone); color: #e080ff; }
+
+/* ---- Controls layout ---- */
+.controls {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: var(--s4);
+  -webkit-align-items: flex-end;
+  align-items: flex-end;
+  margin-bottom: var(--s4);
+}
+
+.control-group {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.control-label {
+  font-size: 0.76em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.btn-row {
+  display: -webkit-flex;
+  display: flex;
+  gap: 4px;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+/* ---- Fretboard canvas wrapper ---- */
+.neck-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 0;
+  overflow-x: auto;
+  position: relative;
+  margin-bottom: var(--s5);
+}
+
+.neck-wrap canvas {
+  display: block;
+  min-width: 700px;
+}
+
+/* ---- Hover tooltip (canvas fretboard) ---- */
+.fret-tooltip {
+  display: none;
+  position: absolute;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 50;
+  white-space: nowrap;
+}
+
+.fret-tooltip .tt-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+}
+
+.fret-tooltip .tt-char {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  display: block;
+}
+
+/* ---- Legend row (below canvas) ---- */
+.legend-row {
+  display: -webkit-flex;
+  display: flex;
+  gap: var(--s5);
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 0 var(--s5);
+  margin-top: var(--s3);
+}
+
+.legend-item {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 0.82em;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.legend-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  border: 1.5px solid transparent;
+}
+
+/* ---- Interval dot color classes (for legend swatches and similar HTML elements) ---- */
+.iv-0  { background: var(--iv-0-bg);  border-color: var(--iv-0-bd);  color: var(--iv-0-tx);  box-shadow: 0 0 10px rgba(200,168,74,0.5); }
+.iv-1  { background: var(--iv-1-bg);  border-color: var(--iv-1-bd);  color: var(--iv-1-tx);  box-shadow: 0 0 6px rgba(139,26,26,0.4); }
+.iv-2  { background: var(--iv-2-bg);  border-color: var(--iv-2-bd);  color: var(--iv-2-tx); }
+.iv-3  { background: var(--iv-3-bg);  border-color: var(--iv-3-bd);  color: var(--iv-3-tx); }
+.iv-4  { background: var(--iv-4-bg);  border-color: var(--iv-4-bd);  color: var(--iv-4-tx); }
+.iv-5  { background: var(--iv-5-bg);  border-color: var(--iv-5-bd);  color: var(--iv-5-tx); }
+.iv-6  { background: var(--iv-6-bg);  border-color: var(--iv-6-bd);  color: var(--iv-6-tx);  box-shadow: 0 0 8px rgba(90,10,122,0.4); }
+.iv-7  { background: var(--iv-7-bg);  border-color: var(--iv-7-bd);  color: var(--iv-7-tx);  box-shadow: 0 0 6px rgba(10,106,58,0.35); }
+.iv-8  { background: var(--iv-8-bg);  border-color: var(--iv-8-bd);  color: var(--iv-8-tx); }
+.iv-9  { background: var(--iv-9-bg);  border-color: var(--iv-9-bd);  color: var(--iv-9-tx); }
+.iv-10 { background: var(--iv-10-bg); border-color: var(--iv-10-bd); color: var(--iv-10-tx); }
+.iv-11 { background: var(--iv-11-bg); border-color: var(--iv-11-bd); color: var(--iv-11-tx); }
+
