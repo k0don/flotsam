@@ -1,0 +1,1 @@
+All rights reserved. No license to use, copy, modify, or distribute this code is granted.
