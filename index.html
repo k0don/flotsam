@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>flotsam</title>
+  <style>
+    :root {
+      --bg: #1c1a1a;
+      --text: #e2ddd4;
+      --text-muted: #8e8678;
+      --border: #38332d;
+      --bg-card: #28231f;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "Helvetica Neue", Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    td {
+      padding: 0;
+    }
+    a {
+      display: block;
+      padding: 12px 24px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      transition: color 0.12s, background 0.12s;
+    }
+    tr + tr a { border-top: none; }
+    a:hover {
+      color: var(--text);
+      background: var(--border);
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <tr><td><a href="bass/triads.html">triads.html</a></td></tr>
+    <tr><td><a href="bass/intervals2.html">intervals2.html</a></td></tr>
+    <tr><td><a href="bass/bass_intervals.html">bass_intervals.html</a></td></tr>
+  </table>
+</body>
+</html>
