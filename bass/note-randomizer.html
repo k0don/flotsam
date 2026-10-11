@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Bass Note-Set Randomizer</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="note-randomizer.css">
+<script src="fretboard.js"></script>
+<script src="noteset.js"></script>
+<script src="session.js"></script>
+<script src="nav.js"></script>
+</head>
+<body>
+
+<div class="page">
+
+<div class="title-block">
+  <h1>Bass Guitar Reference</h1>
+  <h2>Note-Set Randomizer</h2>
+</div>
+
+<div class="today-set">
+  <div class="chips-row" id="noteChips"></div>
+  <div class="pool-label" id="poolLabel"></div>
+  <div class="today-controls">
+    <button class="btn btn-util active" id="labelToggle" onclick="toggleLabel()">Intervals</button>
+    <button class="btn btn-util" id="rerollBtn" onclick="handleReroll()">Reroll <span style="opacity:0.55">(r)</span></button>
+  </div>
+</div>
+
+<div class="drone-line" id="droneLine"></div>
+
+<div class="zone-toggle-row">
+  <button class="btn btn-util active" id="zoneToggle" onclick="toggleZoneFocus()">Home Zone</button>
+</div>
+
+<div class="neck-wrap">
+  <canvas id="fretboard" width="880" height="256"></canvas>
+</div>
+
+<div class="session-wrap">
+  <div class="focus-cue" id="focusCue"></div>
+  <div class="focus-static-line">Say each note name as you play it.</div>
+
+  <div class="timer-row">
+    <div class="timer-readout" id="timerReadout">00:00</div>
+    <button class="btn btn-util" id="startBtn" onclick="handleStart()">Start</button>
+    <button class="btn btn-util" id="pauseBtn" onclick="handlePause()">Pause</button>
+    <button class="btn btn-util" id="resetBtn" onclick="handleReset()">Reset</button>
+    <button class="btn btn-util" id="doneBtn" onclick="handleDone()">Done <span style="opacity:0.55">(space to start/pause)</span></button>
+  </div>
+
+  <div class="timer-banner break" id="breakBanner">12 minutes in &mdash; good checkpoint for a quick form check or a short break.</div>
+  <div class="timer-banner cap" id="capBanner">25 minutes in &mdash; a solid session. Wrap up whenever feels right.</div>
+  <div class="timer-banner ready" id="readyBanner">10+ minutes in &mdash; marking Done now will count toward today's streak.</div>
+
+  <div class="streak-row">
+    <div>
+      <div class="streak-number" id="streakNumber">0</div>
+      <div class="streak-label">Day Streak</div>
+    </div>
+    <div class="cal-grid" id="calContainer"></div>
+  </div>
+</div>
+
+<details class="settings-details">
+  <summary>Settings</summary>
+
+  <div class="settings-group">
+    <div class="settings-group-label">Pools &mdash; Core</div>
+    <div class="checkbox-row" id="corePoolChecks"></div>
+  </div>
+
+  <div class="settings-group">
+    <div class="settings-group-label">Pools &mdash; Modal (opt-in)</div>
+    <div class="checkbox-row" id="modalPoolChecks"></div>
+  </div>
+
+  <div class="settings-group">
+    <div class="settings-group-label">Root Notes</div>
+    <div class="checkbox-row" id="rootChecks"></div>
+    <div class="checkbox-row" style="margin-top:8px">
+      <div class="checkbox-item">
+        <input type="checkbox" id="easyRootsCheck">
+        <label for="easyRootsCheck">Easy roots only (E, A, D, G, C, F)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-group">
+    <div class="checkbox-row">
+      <div class="checkbox-item">
+        <input type="checkbox" id="surpriseModeCheck">
+        <label for="surpriseModeCheck">Surprise mode (don't guarantee the 5th)</label>
+      </div>
+    </div>
+  </div>
+</details>
+
+<div class="footer-note">Standard tuning &middot; 4-string &middot; Frets 0&ndash;12 &middot; New set each day &middot; Press R to reroll, Space to start/pause</div>
+
+</div><!-- .page -->
+
+<script>
+/* ---- State ---- */
+var todayStr, rerollCount, settings, comboHistory, currentSet;
+var showNames = false;       /* show intervals first, matching triads.html's default */
+var dimOutOfZone = true;     /* "Home Zone" view emphasized by default */
+
+var DEFAULT_SETTINGS = {
+  enabledRoots: [0,1,2,3,4,5,6,7,8,9,10,11],
+  enabledPools: CORE_POOL_IDS.slice(),
+  easyRootsOnly: false,
+  surpriseMode: false
+};
+
+/* Canvas state */
+var fbCanvas, fbCtx, fbLayout;
+
+/* Session timer */
+var timer;
+
+/* ---- Date helper (local calendar date, not UTC) ---- */
+function localDateStr(d) {
+  d = d || new Date();
+  var y = d.getFullYear();
+  var m = ('0' + (d.getMonth() + 1)).slice(-2);
+  var day = ('0' + d.getDate()).slice(-2);
+  return y + '-' + m + '-' + day;
+}
+
+/* ---- Home zone ---- */
+function computeHomeZone(rootPc) {
+  var rootPositions = positionsFor([rootPc], BASS_OPEN, 12);
+  var frets = rootPositions.map(function(p) { return p.fret; });
+  var fromFret3 = frets.filter(function(f) { return f >= 3; });
+  var startFret = fromFret3.length ? Math.min.apply(null, fromFret3) : Math.min.apply(null, frets);
+  return { fretStart: startFret, fretEnd: Math.min(startFret + 4, 12) };
+}
+
+/* ---- Fretboard ---- */
+function initFretboard() {
+  fbCanvas = document.getElementById('fretboard');
+  fbCtx    = fbCanvas.getContext('2d');
+  fbLayout = makeNeckLayout(fbCanvas, {
+    numFrets:  13,
+    dotRadius: 14,
+    margins:   { L:56, R:18, T:36, B:32 }
+  });
+}
+
+function renderFretboard() {
+  drawNeck(fbCtx, fbLayout, { showOpenLabel: true });
+
+  var zone = computeHomeZone(currentSet.root.pc);
+  drawZoneHighlight(fbCtx, fbLayout, zone, { label: 'Home Zone' });
+
+  var pcs = currentSet.notes.map(function(n) { return n.pc; });
+  var noteByPc = {};
+  currentSet.notes.forEach(function(n) { noteByPc[n.pc] = n; });
+
+  var positions = positionsFor(pcs, BASS_OPEN, 12);
+  positions.forEach(function(p) {
+    var n = noteByPc[p.pc];
+    var ivIndex = (p.pc === currentSet.root.pc) ? 0 : ((p.pc - currentSet.root.pc + 12) % 12);
+    var label = showNames ? n.name : n.interval;
+    var inZone = p.fret >= zone.fretStart && p.fret <= zone.fretEnd;
+    var alpha = (!dimOutOfZone || inZone) ? 1 : 0.32;
+    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, undefined, { alpha: alpha });
+  });
+}
+
+/* ---- Chips / pool label / drone ---- */
+function renderChips() {
+  var el = document.getElementById('noteChips');
+  el.innerHTML = '';
+  currentSet.notes.forEach(function(n) {
+    var isRoot = n.pc === currentSet.root.pc;
+    var ivIndex = isRoot ? 0 : ((n.pc - currentSet.root.pc + 12) % 12);
+    var chip = document.createElement('div');
+    chip.className = 'note-chip iv-' + ivIndex + (isRoot ? ' note-chip-root' : '');
+    chip.textContent = showNames ? n.name : n.interval;
+    el.appendChild(chip);
+  });
+  document.getElementById('poolLabel').textContent = 'from ' + currentSet.pool.label;
+}
+
+function renderDrone() {
+  var el = document.getElementById('droneLine');
+  el.innerHTML = '';
+  var strong = document.createElement('strong');
+  strong.textContent = currentSet.drone.chord;
+  el.appendChild(strong);
+  el.appendChild(document.createTextNode(' ' + currentSet.drone.suggestion.slice(currentSet.drone.chord.length).trim()));
+}
+
+/* ---- Master render ---- */
+function renderAll() {
+  renderChips();
+  renderDrone();
+  renderFretboard();
+}
+
+/* ---- Toggles ---- */
+function toggleLabel() {
+  showNames = !showNames;
+  document.getElementById('labelToggle').textContent = showNames ? 'Note Names' : 'Intervals';
+  renderAll();
+}
+
+function toggleZoneFocus() {
+  dimOutOfZone = !dimOutOfZone;
+  document.getElementById('zoneToggle').textContent = dimOutOfZone ? 'Home Zone' : 'Full Neck';
+  document.getElementById('zoneToggle').classList.toggle('active', dimOutOfZone);
+  renderFretboard();
+}
+
+/* ---- Reroll ---- */
+function handleReroll() {
+  rerollCount = bumpRerollCount(todayStr);
+  currentSet = generateSet(todayStr, rerollCount, settings, comboHistory);
+  comboHistory = recordHistoryEntry(todayStr, currentSet.root.pc, currentSet.pool.id);
+  renderAll();
+}
+
+/* ---- Timer wiring ---- */
+function formatMMSS(ms) {
+  var totalSec = Math.floor(ms / 1000);
+  var m = Math.floor(totalSec / 60);
+  var s = totalSec % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function initTimer() {
+  timer = makeSessionTimer({
+    onTick: function(elapsedMs) {
+      document.getElementById('timerReadout').textContent = formatMMSS(elapsedMs);
+    },
+    onWorkPrompt: function() {
+      document.getElementById('breakBanner').classList.add('show');
+    },
+    onCapMessage: function() {
+      document.getElementById('capBanner').classList.add('show');
+    },
+    onDoneEligible: function() {
+      document.getElementById('readyBanner').classList.add('show');
+    }
+  });
+  timer.reset();  /* drives the readout to 00:00 via the real tick path, not static markup */
+}
+
+function handleStart() { timer.start(); }
+function handlePause() { timer.pause(); }
+function handleReset() {
+  timer.reset();
+  ['breakBanner', 'capBanner', 'readyBanner'].forEach(function(id) {
+    document.getElementById(id).classList.remove('show');
+  });
+}
+function handleDone() {
+  updateStreakUI(recordPracticeDay(todayStr));
+}
+
+/* ---- Streak ---- */
+function updateStreakUI(streakState) {
+  streakState = streakState || getStreak();
+  document.getElementById('streakNumber').textContent = streakState.currentStreak;
+  render4WeekCalendar(document.getElementById('calContainer'), streakState.log, todayStr);
+}
+
+/* ---- Settings panel ---- */
+function toggleInArray(arr, value) {
+  var i = arr.indexOf(value);
+  if (i === -1) arr.push(value); else arr.splice(i, 1);
+}
+
+function buildPoolChecks(containerId, poolIds) {
+  var c = document.getElementById(containerId);
+  poolIds.forEach(function(id) {
+    var pool = POOLS[id];
+    var item = document.createElement('div');
+    item.className = 'checkbox-item';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = 'pool-' + id;
+    cb.checked = settings.enabledPools.indexOf(id) !== -1;
+    cb.onchange = function() {
+      toggleInArray(settings.enabledPools, id);
+      saveSettings(settings);
+    };
+    var lbl = document.createElement('label');
+    lbl.setAttribute('for', cb.id);
+    lbl.textContent = pool.label;
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    c.appendChild(item);
+  });
+}
+
+function buildRootChecks() {
+  var c = document.getElementById('rootChecks');
+  NOTES.forEach(function(name, pc) {
+    var item = document.createElement('div');
+    item.className = 'checkbox-item';
+    var cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = 'root-' + pc;
+    cb.checked = settings.enabledRoots.indexOf(pc) !== -1;
+    cb.onchange = function() {
+      toggleInArray(settings.enabledRoots, pc);
+      saveSettings(settings);
+    };
+    var lbl = document.createElement('label');
+    lbl.setAttribute('for', cb.id);
+    lbl.textContent = name;
+    item.appendChild(cb);
+    item.appendChild(lbl);
+    c.appendChild(item);
+  });
+}
+
+function buildSettingsUI() {
+  buildPoolChecks('corePoolChecks', CORE_POOL_IDS);
+  buildPoolChecks('modalPoolChecks', MODAL_POOL_IDS);
+  buildRootChecks();
+
+  var easyCb = document.getElementById('easyRootsCheck');
+  easyCb.checked = settings.easyRootsOnly;
+  easyCb.onchange = function() { settings.easyRootsOnly = easyCb.checked; saveSettings(settings); };
+
+  var surpriseCb = document.getElementById('surpriseModeCheck');
+  surpriseCb.checked = settings.surpriseMode;
+  surpriseCb.onchange = function() { settings.surpriseMode = surpriseCb.checked; saveSettings(settings); };
+}
+
+/* ---- Keyboard shortcuts ---- */
+function onKeyDown(e) {
+  var tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+  if (e.key === 'r' || e.key === 'R') {
+    handleReroll();
+  } else if (e.key === ' ') {
+    e.preventDefault();
+    if (timer.getState() === 'running') timer.pause(); else timer.start();
+  }
+}
+
+/* ---- Boot ---- */
+function boot() {
+  todayStr     = localDateStr();
+  settings     = getSettings(DEFAULT_SETTINGS);
+  comboHistory = getHistory();
+  rerollCount  = getRerollCount(todayStr);
+  currentSet   = generateSet(todayStr, rerollCount, settings, comboHistory);
+  comboHistory = recordHistoryEntry(todayStr, currentSet.root.pc, currentSet.pool.id);
+
+  document.getElementById('focusCue').textContent = focusCueForDate(todayStr);
+
+  buildSettingsUI();
+  initFretboard();
+  renderAll();
+  initTimer();
+  updateStreakUI();
+
+  document.addEventListener('keydown', onKeyDown);
+}
+
+boot();
+</script>
+
+</body>
+</html>

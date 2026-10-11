@@ -1,0 +1,274 @@
+/* note-randomizer.html — page-specific styles */
+
+.page {
+  padding-top: 32px;
+  padding-bottom: 60px;
+}
+
+/* ---- Title block (mirrors bass_intervals.css's convention) ---- */
+.title-block { text-align: center; margin-bottom: 28px; }
+
+.title-block h1 {
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: #6a6a6a;
+  font-weight: 400;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.title-block h2 {
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f0e8d0;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+/* ---- Today's set ---- */
+.today-set { margin-bottom: var(--s5); }
+
+.chips-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.note-chip {
+  min-width: 46px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.note-chip.note-chip-root {
+  box-shadow: 0 0 12px rgba(200,168,74,0.45);
+  font-weight: 800;
+}
+
+.pool-label {
+  font-size: 0.8em;
+  font-style: italic;
+  color: var(--text-muted);
+  margin-bottom: var(--s3);
+}
+
+.today-controls {
+  display: -webkit-flex;
+  display: flex;
+  gap: var(--s2);
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+/* ---- Drone line ---- */
+.drone-line {
+  display: inline-block;
+  font-size: 0.95em;
+  color: var(--text);
+  padding: 9px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: var(--s5);
+}
+
+.drone-line strong { color: var(--iv-0-bg); font-weight: 700; }
+
+/* ---- Fretboard controls ---- */
+.zone-toggle-row { margin-bottom: var(--s3); }
+
+/* ---- Session wrapper ---- */
+.session-wrap {
+  margin-top: var(--s6);
+  padding: var(--s4);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.focus-cue {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.focus-static-line {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-bottom: var(--s4);
+}
+
+.timer-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: var(--s3);
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-bottom: var(--s2);
+}
+
+.timer-readout {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--iv-0-bg);
+  min-width: 84px;
+}
+
+.timer-banner {
+  display: none;
+  font-size: 0.82em;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.timer-banner.show { display: block; }
+
+.timer-banner.break {
+  background: rgba(200,168,74,0.12);
+  border: 1px solid var(--iv-0-bd);
+  color: var(--iv-0-bg);
+}
+
+.timer-banner.cap {
+  background: rgba(139,26,26,0.15);
+  border: 1px solid var(--iv-1-bd);
+  color: var(--iv-1-tx);
+}
+
+.timer-banner.ready {
+  background: rgba(10,106,58,0.12);
+  border: 1px solid var(--iv-7-bd);
+  color: var(--iv-7-tx);
+}
+
+/* ---- Streak ---- */
+.streak-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: var(--s4);
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-top: var(--s4);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--border-sub);
+}
+
+.streak-number {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--iv-0-bg);
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.streak-label {
+  font-size: 0.72em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 14px);
+  grid-auto-rows: 14px;
+  gap: 4px;
+}
+
+.cal-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+}
+
+.cal-dot.practiced {
+  background: var(--iv-0-bg);
+  border-color: var(--iv-0-bd);
+  box-shadow: 0 0 6px rgba(200,168,74,0.5);
+}
+
+/* ---- Settings ---- */
+.settings-details {
+  margin-top: var(--s6);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: var(--s3) var(--s4);
+  background: var(--bg-card);
+}
+
+.settings-details summary {
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.settings-group { margin-top: var(--s4); }
+
+.settings-group-label {
+  font-size: 0.76em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.checkbox-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.checkbox-item {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82em;
+  color: var(--text);
+}
+
+.checkbox-item input { cursor: pointer; }
+.checkbox-item label { cursor: pointer; }
+
+/* ---- Footer ---- */
+.footer-note {
+  font-size: 12px;
+  color: #505050;
+  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+  padding-top: var(--s6);
+}
