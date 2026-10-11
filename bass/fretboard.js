@@ -255,3 +255,63 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
 
   ctx.restore();
 }
+
+/**
+ * drawZoneHighlight — soft rounded-rect highlight spanning a fret range
+ * across all 4 strings. Call AFTER drawNeck() and BEFORE drawNoteDot()
+ * calls, so note dots render on top of the shaded zone.
+ *
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object} layout   from makeNeckLayout()
+ * @param {object} zone     { fretStart, fretEnd } inclusive fret-column indices,
+ *                          same 0..layout.numFrets-1 space as layout.fretX()
+ * @param {object} [opts]
+ *   color        {string}  base hex color (default '#c8a84a')
+ *   fillAlpha    {number}  0-1 fill opacity (default 0.12)
+ *   strokeAlpha  {number}  0-1 border opacity (default 0.5)
+ *   lineWidth    {number}  border width px (default 1.5)
+ *   cornerRadius {number}  px (default 10)
+ *   pad          {number}  vertical padding beyond string rows 0 and 3
+ *                          (default layout.dotRadius + 8)
+ *   label        {string}  optional small caption drawn above the box
+ */
+function drawZoneHighlight(ctx, layout, zone, opts) {
+  opts   = opts || {};
+  var color   = opts.color        || '#c8a84a';
+  var fAlpha  = (opts.fillAlpha   !== undefined) ? opts.fillAlpha   : 0.12;
+  var sAlpha  = (opts.strokeAlpha !== undefined) ? opts.strokeAlpha : 0.5;
+  var lw      = (opts.lineWidth   !== undefined) ? opts.lineWidth   : 1.5;
+  var cr      = (opts.cornerRadius !== undefined) ? opts.cornerRadius : 10;
+  var pad     = (opts.pad !== undefined) ? opts.pad : layout.dotRadius + 8;
+
+  var x1 = layout.M.L + zone.fretStart * layout.stripeW;
+  var x2 = layout.M.L + (zone.fretEnd + 1) * layout.stripeW;
+  var y1 = layout.strY(0) - pad;
+  var y2 = layout.strY(3) + pad;
+  var w  = x2 - x1;
+  var h  = y2 - y1;
+
+  var fillHex   = fAlpha   >= 1 ? 'ff' : Math.round(fAlpha   * 255).toString(16).padStart(2, '0');
+  var strokeHex = sAlpha   >= 1 ? 'ff' : Math.round(sAlpha   * 255).toString(16).padStart(2, '0');
+
+  ctx.save();
+  ctx.beginPath();
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(x1, y1, w, h, cr);
+  } else {
+    ctx.rect(x1, y1, w, h);
+  }
+  ctx.fillStyle   = color + fillHex;
+  ctx.fill();
+  ctx.strokeStyle = color + strokeHex;
+  ctx.lineWidth   = lw;
+  ctx.stroke();
+
+  if (opts.label) {
+    ctx.font = '600 12px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = '#b09c62';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(opts.label, (x1 + x2) / 2, y1 - 2);
+  }
+  ctx.restore();
+}
