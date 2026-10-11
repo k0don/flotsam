@@ -6,7 +6,8 @@
 var NAV_PAGES = [
   { href: 'bass_intervals.html', label: 'Interval Map' },
   { href: 'intervals2.html',     label: 'Intervals'    },
-  { href: 'triads.html',         label: 'Triads'       }
+  { href: 'triads.html',         label: 'Triads'       },
+  { href: 'note-randomizer.html', label: 'Note Randomizer' }
 ];
 
 function buildNav() {
