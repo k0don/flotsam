@@ -1,6 +1,6 @@
 /* triads.html — page-specific styles */
 
-body { font-size: 16px; }
+body { font-size: 17px; }
 
 .page {
   padding-top: 28px;
@@ -82,8 +82,8 @@ body { font-size: 16px; }
   -webkit-tap-highlight-color: transparent;
 }
 
-.shape-card:hover { border-color: #4e4840; background: #38322c; }
-.shape-card.active { background: #38322c; }
+.shape-card:hover { border-color: #70675c; background: #5a5147; }
+.shape-card.active { background: #5a5147; }
 
 .card-label {
   font-size: 0.76em;

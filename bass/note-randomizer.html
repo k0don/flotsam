@@ -36,7 +36,7 @@
 </div>
 
 <div class="neck-wrap">
-  <canvas id="fretboard" width="880" height="256"></canvas>
+  <canvas id="fretboard" width="880" height="276"></canvas>
 </div>
 
 <div class="session-wrap">
@@ -60,7 +60,7 @@
       <div class="streak-number" id="streakNumber">0</div>
       <div class="streak-label">Day Streak</div>
     </div>
-    <div class="cal-grid" id="calContainer"></div>
+    <div id="calContainer"></div>
   </div>
 </div>
 
@@ -145,8 +145,8 @@ function initFretboard() {
   fbCtx    = fbCanvas.getContext('2d');
   fbLayout = makeNeckLayout(fbCanvas, {
     numFrets:  13,
-    dotRadius: 14,
-    margins:   { L:56, R:18, T:36, B:32 }
+    dotRadius: 18,
+    margins:   { L:56, R:18, T:56, B:32 }
   });
 }
 
@@ -166,8 +166,8 @@ function renderFretboard() {
     var ivIndex = (p.pc === currentSet.root.pc) ? 0 : ((p.pc - currentSet.root.pc + 12) % 12);
     var label = showNames ? n.name : n.interval;
     var inZone = p.fret >= zone.fretStart && p.fret <= zone.fretEnd;
-    var alpha = (!dimOutOfZone || inZone) ? 1 : 0.32;
-    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, undefined, { alpha: alpha });
+    var shade = (!dimOutOfZone || inZone) ? 0 : 0.45;
+    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, undefined, { shade: shade });
   });
 }
 

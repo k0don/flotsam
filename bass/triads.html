@@ -133,7 +133,7 @@ var neckCanvas  = document.getElementById('neck');
 var nctx        = neckCanvas.getContext('2d');
 var neckLayout  = makeNeckLayout(neckCanvas, {
   numFrets:  FRETS,
-  dotRadius: 13,
+  dotRadius: 16,
   margins:   { L:52, R:18, T:40, B:44 }
 });
 
@@ -189,8 +189,12 @@ function drawTriadDot(s, f, intIdx, intColors) {
   nctx.fill(); nctx.stroke();
 
   var sm = label && label.length > 1;
-  nctx.font = (isRoot ? '700' : '600') + ' ' + (sm ? '10' : '12') + 'px -apple-system,"Helvetica Neue",Arial,sans-serif';
+  nctx.font = '800 ' + Math.round(DOT_R * (sm ? 0.8 : 1.0)) + 'px ' + FB_DOT_FONT;
   nctx.textAlign = 'center'; nctx.textBaseline = 'middle';
+  if (!isRoot) {
+    nctx.lineJoin = 'round'; nctx.strokeStyle = 'rgba(0,0,0,0.45)'; nctx.lineWidth = Math.max(2, DOT_R * 0.14);
+    nctx.strokeText(label, x, y + 0.5);
+  }
   nctx.fillStyle = tx;
   nctx.fillText(label, x, y + 0.5);
 }
@@ -278,7 +282,7 @@ function drawMiniCard(canvas, shape, typeKey, isActive) {
   var col       = TYPE_COLORS[typeKey];
   var intColors = TRIAD_INTERVALS[typeKey].map(function(i) { return IV_COLORS[i]; });
 
-  ctx.fillStyle = '#231f1a';
+  ctx.fillStyle = '#4c4338';
   ctx.fillRect(0, 0, W, H);
 
   var offsets  = shape.notes.map(function(n) { return (n.i - shape.ai) - n.d*5; });
@@ -295,7 +299,7 @@ function drawMiniCard(canvas, shape, typeKey, isActive) {
 
   /* Alternating column shading */
   for (var ci = 0; ci < totalFrets; ci++) {
-    ctx.fillStyle = ci % 2 === 0 ? '#382f1e' : '#201c17';
+    ctx.fillStyle = ci % 2 === 0 ? '#4f432a' : '#352e26';
     ctx.fillRect(Lm + ci * fw, Tm - 4, fw, H - Bm + 4 - (Tm - 4));
   }
   if (isActive) {
@@ -306,16 +310,16 @@ function drawMiniCard(canvas, shape, typeKey, isActive) {
   for (var i = 0; i <= totalFrets; i++) {
     var fx2 = Lm + i*fw;
     ctx.beginPath(); ctx.moveTo(fx2, Tm-4); ctx.lineTo(fx2, H-Bm+4);
-    ctx.strokeStyle = '#7078a0'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = '#8c92b2'; ctx.lineWidth = 1; ctx.stroke();
   }
 
   var thkMap  = [3.2, 2.2, 1.4, 1.0];
   /* Aurora burst: d=0 is lowest/thickest string (deep amber) → d=3 highest/thinnest (bright gold) */
-  var strColM = ['#826020','#9a7832','#b29044','#c8a85c'];
+  var strColM = ['#a77b29','#bd933d','#c3a561','#d4ba7e'];
   for (var d = 0; d <= maxD; d++) {
     var sy2 = syM(d);
     ctx.beginPath(); ctx.moveTo(Lm, sy2); ctx.lineTo(W-Rm, sy2);
-    ctx.strokeStyle = strColM[d] || '#302a22'; ctx.lineWidth = thkMap[d] || 1; ctx.stroke();
+    ctx.strokeStyle = strColM[d] || '#4b4235'; ctx.lineWidth = thkMap[d] || 1; ctx.stroke();
   }
 
   var byD = {};
@@ -346,13 +350,13 @@ function drawMiniCard(canvas, shape, typeKey, isActive) {
     ctx.lineWidth   = isR ? 1.5 : 1;
     ctx.fill(); ctx.stroke();
     var lbl = INT_LABELS[typeKey][n.li], sm = lbl.length > 1;
-    ctx.font = (isR ? '700' : '600') + ' ' + (sm ? '8.5' : '11') + 'px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.font = (isR ? '700' : '600') + ' ' + (sm ? '9.5' : '12') + 'px -apple-system,"Helvetica Neue",Arial,sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = tx2;
     ctx.fillText(lbl, x3, y3 + 0.5);
   });
 
-  ctx.strokeStyle = isActive ? col + '80' : '#42372f';
+  ctx.strokeStyle = isActive ? col + '80' : '#5d4d42';
   ctx.lineWidth   = isActive ? 2 : 1;
   ctx.strokeRect(0.5, 0.5, W-1, H-1);
 }

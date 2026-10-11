@@ -14,24 +14,24 @@ var STR_NAMES = ['G','D','A','E'];
 
 /* ---- Interval colors (12-semitone master palette) ---- */
 var IV_COLORS = [
-  '#c8a84a',  /* 0  root         */
-  '#8b1a1a',  /* 1  minor 2nd    */
-  '#6b3a0a',  /* 2  major 2nd    */
-  '#1a3a7a',  /* 3  minor 3rd    */
-  '#6a7a0a',  /* 4  major 3rd    */
-  '#1a5a2a',  /* 5  perfect 4th  */
-  '#5a0a7a',  /* 6  tritone      */
-  '#0a6a3a',  /* 7  perfect 5th  */
-  '#1a4a5a',  /* 8  minor 6th    */
-  '#5a4a1a',  /* 9  major 6th    */
-  '#1a5a5a',  /* 10 minor 7th    */
-  '#5a1a4a'   /* 11 major 7th    */
+  '#d3b96d',  /* 0  root         */
+  '#b22121',  /* 1  minor 2nd    */
+  '#95510e',  /* 2  major 2nd    */
+  '#224ca0',  /* 3  minor 3rd    */
+  '#8fa40d',  /* 4  major 3rd    */
+  '#247e3b',  /* 5  perfect 4th  */
+  '#790da4',  /* 6  tritone      */
+  '#0e9451',  /* 7  perfect 5th  */
+  '#24677e',  /* 8  minor 6th    */
+  '#7e6724',  /* 9  major 6th    */
+  '#247e7e',  /* 10 minor 7th    */
+  '#7e2467'   /* 11 major 7th    */
 ];
 
 var IV_BORDER = [
-  '#e8c860','#b02020','#9a5a18','#2a5ab0','#9ab010',
-  '#2a8a40','#8a18b0','#18a060','#2a7a8a','#8a7030',
-  '#208888','#882878'
+  '#eed688','#d72727','#c2711e','#386fd0','#bfda14',
+  '#35ad50','#aa1ed8','#1ec878','#3599ad','#ac8c3c',
+  '#29adad','#ab3297'
 ];
 
 var IV_TEXT = [
@@ -75,6 +75,17 @@ var INTERVAL_DATA = [
    Canvas drawing utilities
    ================================================================ */
 
+var FB_DOT_FONT    = '-apple-system,"Helvetica Neue",Arial,sans-serif';
+
+function fbShade(hex, amt) {
+  if (!amt) return hex;
+  var n = parseInt(hex.slice(1), 16);
+  var k = 1 - amt;
+  var r = Math.round(((n >> 16) & 255) * k);
+  var g = Math.round(((n >> 8) & 255) * k);
+  var b = Math.round((n & 255) * k);
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
 var FB_FRET_MARKS  = [3, 5, 7, 9, 12];
 var FB_DOUBLE_MARK = 12;
 
@@ -131,7 +142,7 @@ function drawNeck(ctx, layout, opts) {
   var fbT = M.T - 20, fbB = H - M.B + 20;
   for (var fi = 0; fi < layout.numFrets; fi++) {
     var cx = M.L + fi * layout.stripeW;
-    ctx.fillStyle = fi === 0 ? '#4a4128' : (fi % 2 === 0 ? '#382f1e' : '#201c17');
+    ctx.fillStyle = fi === 0 ? '#615535' : (fi % 2 === 0 ? '#4f432a' : '#352e26');
     ctx.fillRect(cx, fbT, layout.stripeW, fbB - fbT);
   }
 
@@ -141,7 +152,7 @@ function drawNeck(ctx, layout, opts) {
     var isNut = (f === 0);
     ctx.beginPath();
     ctx.moveTo(x, fbT); ctx.lineTo(x, fbB);
-    ctx.strokeStyle = isNut ? '#d0c8a0' : '#8890a0';
+    ctx.strokeStyle = isNut ? '#d0c8a0' : '#a2a8b4';
     ctx.lineWidth   = isNut ? 4         : 1.5;
     ctx.stroke();
   }
@@ -157,31 +168,31 @@ function drawNeck(ctx, layout, opts) {
       [-9, 9].forEach(function(dx) {
         ctx.beginPath();
         ctx.arc(fx + dx, belowY, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = '#7a6838'; ctx.fill();
+        ctx.fillStyle = '#998346'; ctx.fill();
       });
     } else {
       ctx.beginPath();
       ctx.arc(fx, belowY, 3.5, 0, Math.PI * 2);
-      ctx.fillStyle = '#7a6838'; ctx.fill();
+      ctx.fillStyle = '#998346'; ctx.fill();
     }
-    ctx.font = '600 12px -apple-system,"Helvetica Neue",Arial,sans-serif';
-    ctx.fillStyle = '#b09c62';
+    ctx.font = '600 13px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = '#bfaf81';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillText(fm, fx, fbT - 2);
   });
 
   /* "OPEN" column label — above the grid, matching fret number placement */
   if (showOpenLabel) {
-    ctx.font = '600 10px -apple-system,"Helvetica Neue",Arial,sans-serif';
-    ctx.fillStyle = '#b09c62';
+    ctx.font = '600 11px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = '#bfaf81';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     ctx.fillText('OPEN', M.L + layout.stripeW / 2, fbT - 2);
   }
 
   /* String lines + labels */
   var strThick     = [1.2, 1.9, 2.7, 3.6];
-  var strColor     = ['#c8a85c','#b29044','#9a7832','#826020'];
-  var strColorOpen = ['#e4c070','#caa85c','#b09048','#987038'];  /* bolder open-column segment */
+  var strColor     = ['#d4ba7e','#c3a561','#bd933d','#a77b29'];
+  var strColorOpen = ['#ebd197','#d5ba7f','#c0a466','#ba8944'];  /* bolder open-column segment */
   for (var s = 0; s < 4; s++) {
     var sy = layout.strY(s);
     ctx.beginPath();
@@ -191,8 +202,8 @@ function drawNeck(ctx, layout, opts) {
     ctx.beginPath();
     ctx.moveTo(fbL, sy); ctx.lineTo(fbL + layout.stripeW, sy);
     ctx.strokeStyle = strColorOpen[s]; ctx.lineWidth = strThick[s] + 1.0; ctx.stroke();
-    ctx.font = 'bold 13px -apple-system,"Helvetica Neue",Arial,sans-serif';
-    ctx.fillStyle = '#baa868';
+    ctx.font = 'bold 14px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = '#c8ba88';
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText(STR_NAMES[s], fbL - 8, sy);
   }
@@ -210,12 +221,14 @@ function drawNeck(ctx, layout, opts) {
  * @param {string} [sublabel] smaller secondary text below label (e.g. note name)
  * @param {object} [opts]
  *   alpha  {number}  global opacity 0–1 (default 1); use <1 for secondary triad notes
+ *   shade  {number}  0–1 darkens fill and border toward black while staying opaque (default 0)
  */
 function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
   opts      = opts   || {};
   var alpha = (opts.alpha !== undefined) ? opts.alpha : 1.0;
-  var bg    = IV_COLORS[ivIndex];
-  var bd    = IV_BORDER[ivIndex];
+  var shade = opts.shade || 0;
+  var bg    = fbShade(IV_COLORS[ivIndex], shade);
+  var bd    = fbShade(IV_BORDER[ivIndex], shade);
   var tx    = IV_TEXT[ivIndex];
   var isRoot = (ivIndex === 0);
 
@@ -237,19 +250,27 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
   ctx.lineWidth   = 1.5;
   ctx.fill(); ctx.stroke();
 
-  /* Primary label */
-  var sm = label && label.length > 1;
-  ctx.font = (isRoot ? '700' : '600') + ' ' + (sm ? '9' : '11') + 'px \'Courier New\',monospace';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = sublabel ? 'alphabetic' : 'middle';
-  ctx.fillStyle    = tx;
-  ctx.fillText(label || '', x, sublabel ? y - 1 : y + 0.5);
+  /* Labels scale with the dot radius; a dark outline keeps light text legible on brighter fills */
+  var sm      = label && label.length > 1;
+  var lblPx   = Math.round(r * (sublabel ? 0.72 : (sm ? 0.75 : 0.95)));
+  var outline = !isRoot;
+  ctx.textAlign   = 'center';
+  ctx.fillStyle   = tx;
+  ctx.lineJoin    = 'round';
+  ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+  ctx.lineWidth   = Math.max(2, r * 0.14);
 
-  /* Sublabel */
+  ctx.font         = '800 ' + lblPx + 'px ' + FB_DOT_FONT;
+  ctx.textBaseline = sublabel ? 'alphabetic' : 'middle';
+  var ly = sublabel ? y : y + 0.5;
+  if (outline) ctx.strokeText(label || '', x, ly);
+  ctx.fillText(label || '', x, ly);
+
   if (sublabel) {
-    ctx.font         = '600 8px \'Courier New\',monospace';
+    ctx.font         = '700 ' + Math.round(r * 0.62) + 'px ' + FB_DOT_FONT;
     ctx.textBaseline = 'top';
-    ctx.globalAlpha  = (alpha < 1 ? alpha : 1) * 0.75;
+    ctx.globalAlpha  = (alpha < 1 ? alpha : 1) * 0.9;
+    if (outline) ctx.strokeText(sublabel, x, y + 2);
     ctx.fillText(sublabel, x, y + 2);
   }
 
@@ -266,23 +287,24 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
  * @param {object} zone     { fretStart, fretEnd } inclusive fret-column indices,
  *                          same 0..layout.numFrets-1 space as layout.fretX()
  * @param {object} [opts]
- *   color        {string}  base hex color (default '#c8a84a')
+ *   color        {string}  base hex color (default '#d3b96d')
  *   fillAlpha    {number}  0-1 fill opacity (default 0.12)
  *   strokeAlpha  {number}  0-1 border opacity (default 0.5)
  *   lineWidth    {number}  border width px (default 1.5)
  *   cornerRadius {number}  px (default 10)
  *   pad          {number}  vertical padding beyond string rows 0 and 3
- *                          (default layout.dotRadius + 8)
- *   label        {string}  optional small caption drawn above the box
+ *                          (default: the neck's 20px overhang, or dotRadius + 2 if larger)
+ *   label        {string}  optional caption, drawn in a row above the fret numbers —
+ *                          needs layout.M.T >= ~52 to fit on the canvas
  */
 function drawZoneHighlight(ctx, layout, zone, opts) {
   opts   = opts || {};
-  var color   = opts.color        || '#c8a84a';
+  var color   = opts.color        || '#d3b96d';
   var fAlpha  = (opts.fillAlpha   !== undefined) ? opts.fillAlpha   : 0.12;
   var sAlpha  = (opts.strokeAlpha !== undefined) ? opts.strokeAlpha : 0.5;
   var lw      = (opts.lineWidth   !== undefined) ? opts.lineWidth   : 1.5;
   var cr      = (opts.cornerRadius !== undefined) ? opts.cornerRadius : 10;
-  var pad     = (opts.pad !== undefined) ? opts.pad : layout.dotRadius + 8;
+  var pad     = (opts.pad !== undefined) ? opts.pad : Math.max(20, layout.dotRadius + 2);
 
   var x1 = layout.M.L + zone.fretStart * layout.stripeW;
   var x2 = layout.M.L + (zone.fretEnd + 1) * layout.stripeW;
@@ -308,10 +330,11 @@ function drawZoneHighlight(ctx, layout, zone, opts) {
   ctx.stroke();
 
   if (opts.label) {
-    ctx.font = '600 12px -apple-system,"Helvetica Neue",Arial,sans-serif';
-    ctx.fillStyle = '#b09c62';
+    ctx.font = '600 13px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = '#bfaf81';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText(opts.label, (x1 + x2) / 2, y1 - 2);
+    /* drawNeck puts fret numbers with their baseline at M.T - 22; sit one text row above them */
+    ctx.fillText(opts.label, (x1 + x2) / 2, layout.M.T - 38);
   }
   ctx.restore();
 }

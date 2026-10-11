@@ -14,10 +14,10 @@
 .title-block { text-align: center; }
 
 .title-block h1 {
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: #6a6a6a;
+  color: #848484;
   font-weight: 400;
   font-family: 'Courier New', Courier, monospace;
 }
@@ -46,9 +46,9 @@
 
 .root-label {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: 0.2em;
-  color: #6a6a6a;
+  color: #848484;
   text-transform: uppercase;
 }
 
@@ -103,8 +103,8 @@
   align-items: center;
   gap: 9px;
   padding: 7px 10px;
-  background: #1e1d1d;
-  border: 1px solid #2b2b2b;
+  background: #424040;
+  border: 1px solid #4a4a4a;
   border-radius: 2px;
 }
 
@@ -121,7 +121,7 @@
   -webkit-justify-content: center;
   justify-content: center;
   font-family: 'Courier New', Courier, monospace;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   border: 2px solid transparent;
 }
@@ -129,7 +129,7 @@
 .legend-text { -webkit-flex: 1; flex: 1; min-width: 0; }
 
 .legend-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: #d8d0b8;
   line-height: 1.2;
@@ -137,21 +137,21 @@
 
 .legend-hs {
   font-family: 'Courier New', Courier, monospace;
-  font-size: 10px;
-  color: #5c5c5c;
+  font-size: 12px;
+  color: #767676;
   line-height: 1.3;
 }
 
 .legend-char {
-  font-size: 12px;
+  font-size: 14px;
   color: #909090;
   line-height: 1.3;
   font-style: italic;
 }
 
 .footer-note {
-  font-size: 12px;
-  color: #505050;
+  font-size: 14px;
+  color: #6a6a6a;
   font-family: 'Courier New', Courier, monospace;
   letter-spacing: 0.08em;
   text-align: center;
