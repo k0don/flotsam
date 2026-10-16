@@ -1,11 +1,11 @@
-/* note-randomizer.html — page-specific styles */
+/* note-randomizer/ — page-specific styles */
 
 .page {
   padding-top: 32px;
   padding-bottom: 60px;
 }
 
-/* ---- Title block (mirrors bass_intervals.css's convention) ---- */
+/* ---- Title block (mirrors interval-map/style.css's convention) ---- */
 .title-block { text-align: center; margin-bottom: 28px; }
 
 .title-block h1 {

@@ -1,5 +1,5 @@
 /* ================================================================
-   styles.css — shared styles for the bass/ reference site
+   shared/styles.css — shared styles for the bass/ reference site
    ================================================================ */
 
 /* ---- CSS Custom Properties ---- */
@@ -172,7 +172,7 @@ body {
   color: var(--bg);
 }
 
-/* Note selector buttons (bass_intervals page) */
+/* Note selector buttons (interval-map page) */
 .btn.btn-note {
   width: 38px;
   height: 38px;
@@ -208,7 +208,7 @@ body {
 .btn.btn-type.active[data-type="dim"]   { background: var(--t-dim);   border-color: var(--t-dim);   color: #ffaaaa; }
 .btn.btn-type.active[data-type="aug"]   { background: var(--t-aug);   border-color: var(--t-aug);   color: #f0d080; }
 
-/* Filter buttons (intervals2 page) */
+/* Filter buttons (intervals page) */
 .btn.btn-filter.active[data-q="all"]     { background: var(--iv-9-bg);   border-color: var(--iv-9-bd);   color: var(--iv-9-tx); }
 .btn.btn-filter.active[data-q="perfect"] { background: var(--q-perfect); border-color: var(--q-perfect); color: #80f0c0; }
 .btn.btn-filter.active[data-q="major"]   { background: var(--q-major);   border-color: var(--q-major);   color: #e8f080; }
