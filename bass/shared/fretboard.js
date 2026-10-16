@@ -222,6 +222,7 @@ function drawNeck(ctx, layout, opts) {
  * @param {object} [opts]
  *   alpha  {number}  global opacity 0–1 (default 1); use <1 for secondary triad notes
  *   shade  {number}  0–1 darkens fill and border toward black while staying opaque (default 0)
+ *   sublabelScale {number}  sublabel font size as a fraction of r (default 0.62)
  */
 function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
   opts      = opts   || {};
@@ -267,7 +268,8 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
   ctx.fillText(label || '', x, ly);
 
   if (sublabel) {
-    ctx.font         = '700 ' + Math.round(r * 0.62) + 'px ' + FB_DOT_FONT;
+    var subScale     = (opts.sublabelScale !== undefined) ? opts.sublabelScale : 0.62;
+    ctx.font         = '700 ' + Math.round(r * subScale) + 'px ' + FB_DOT_FONT;
     ctx.textBaseline = 'top';
     ctx.globalAlpha  = (alpha < 1 ? alpha : 1) * 0.9;
     if (outline) ctx.strokeText(sublabel, x, y + 2);

@@ -177,7 +177,7 @@ function renderFretboard() {
     var inZone = p.fret >= zone.fretStart && p.fret <= zone.fretEnd;
     /* Root text is dark (no outline), so it gets a lighter dim to stay readable */
     var shade = (!dimOutOfZone || inZone) ? 0 : (ivIndex === 0 ? 0.45 : 0.6);
-    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, sublabel, { shade: shade });
+    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, sublabel, { shade: shade, sublabelScale: 0.72 });
   });
 }
 
