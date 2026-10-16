@@ -24,15 +24,16 @@ var NAV_PAGES = [
 var NAV_SCRIPT_SRC = document.currentScript.src;
 
 /* Hrefs are resolved relative to bass/shared/, so '../pages/<slug>/'
-   and '../index.html' land in the right place whichever page loaded
-   us. Links name index.html explicitly so they work from file:// as
-   well as on a web server (e.g. GitHub Pages). */
+   and '../' (bass/) land in the right place whichever page loaded us.
+   Links use folder URLs (no trailing index.html) and expect the site
+   to be served over http, e.g. GitHub Pages, or locally via
+   `python3 -m http.server` from the repo root. */
 function pageHref(slug) {
-  return new URL('../pages/' + slug + '/index.html', NAV_SCRIPT_SRC).href;
+  return new URL('../pages/' + slug + '/', NAV_SCRIPT_SRC).href;
 }
 
 function overviewHref() {
-  return new URL('../index.html', NAV_SCRIPT_SRC).href;
+  return new URL('../', NAV_SCRIPT_SRC).href;
 }
 
 /* The current page's slug is its folder name: the last non-empty path
