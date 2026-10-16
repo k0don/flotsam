@@ -1,9 +1,10 @@
 /* ================================================================
    nav.js — builds the sticky site nav and marks the current page.
-   Each page lives in its own folder under bass/ as <slug>/index.html
+   Each page lives in its own folder at bass/pages/<slug>/index.html
    (with its page-specific style.css alongside), and loads this file
-   from ../shared/nav.js. Add a new page by creating bass/<slug>/
-   and appending one { slug, label } entry to NAV_PAGES.
+   from ../../shared/nav.js. Add a new page by creating
+   bass/pages/<slug>/ and appending one { slug, label } entry to
+   NAV_PAGES.
    ================================================================ */
 
 var NAV_PAGES = [
@@ -13,15 +14,17 @@ var NAV_PAGES = [
   { slug: 'note-randomizer', label: 'Note Randomizer' }
 ];
 
-/* Links name index.html explicitly so they work from file:// as well
-   as on a web server (e.g. GitHub Pages). */
+/* Pages are sibling folders under bass/pages/, so '../<slug>/' reaches
+   any other page. Links name index.html explicitly so they work from
+   file:// as well as on a web server (e.g. GitHub Pages). */
 function pageHref(slug) {
   return '../' + slug + '/index.html';
 }
 
 /* The current page's slug is its folder name: the last non-empty path
-   segment, ignoring a trailing index.html. Handles /bass/triads/,
-   /bass/triads/index.html and file:///.../bass/triads/index.html. */
+   segment, ignoring a trailing index.html. Handles /bass/pages/triads/,
+   /bass/pages/triads/index.html and
+   file:///.../bass/pages/triads/index.html. */
 function currentSlug(pathname) {
   var parts = pathname.split('/').filter(function(s) { return s !== ''; });
   if (parts.length && parts[parts.length - 1] === 'index.html') parts.pop();
