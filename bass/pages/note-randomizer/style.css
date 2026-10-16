@@ -58,6 +58,19 @@
   font-weight: 700;
 }
 
+.note-chip-secondary {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.85;
+  margin-left: 5px;
+}
+
+.note-chip-secondary::before {
+  content: '\00b7';
+  margin-right: 5px;
+  opacity: 0.6;
+}
+
 .note-chip.note-chip-root {
   box-shadow: 0 0 12px rgba(211,185,109,0.45);
   font-weight: 800;

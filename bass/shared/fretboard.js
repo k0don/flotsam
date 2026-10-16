@@ -296,6 +296,8 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
  *                          (default: the neck's 20px overhang, or dotRadius + 2 if larger)
  *   label        {string}  optional caption, drawn in a row above the fret numbers —
  *                          needs layout.M.T >= ~52 to fit on the canvas
+ *   labelColor   {string}  caption fill color (default '#bfaf81')
+ *   labelFont    {string}  caption CSS font (default '600 13px' system sans)
  */
 function drawZoneHighlight(ctx, layout, zone, opts) {
   opts   = opts || {};
@@ -330,8 +332,8 @@ function drawZoneHighlight(ctx, layout, zone, opts) {
   ctx.stroke();
 
   if (opts.label) {
-    ctx.font = '600 13px -apple-system,"Helvetica Neue",Arial,sans-serif';
-    ctx.fillStyle = '#bfaf81';
+    ctx.font = opts.labelFont || '600 13px -apple-system,"Helvetica Neue",Arial,sans-serif';
+    ctx.fillStyle = opts.labelColor || '#bfaf81';
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     /* drawNeck puts fret numbers with their baseline at M.T - 22; sit one text row above them */
     ctx.fillText(opts.label, (x1 + x2) / 2, layout.M.T - 38);

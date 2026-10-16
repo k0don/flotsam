@@ -145,7 +145,7 @@ function initFretboard() {
   fbCtx    = fbCanvas.getContext('2d');
   fbLayout = makeNeckLayout(fbCanvas, {
     numFrets:  13,
-    dotRadius: 18,
+    dotRadius: 20,   /* room for a two-line label (primary + sublabel) */
     margins:   { L:56, R:18, T:56, B:32 }
   });
 }
@@ -154,7 +154,15 @@ function renderFretboard() {
   drawNeck(fbCtx, fbLayout, { showOpenLabel: true });
 
   var zone = computeHomeZone(currentSet.root.pc);
-  drawZoneHighlight(fbCtx, fbLayout, zone, { label: 'Home Zone' });
+  drawZoneHighlight(fbCtx, fbLayout, zone, {
+    label:       'Home Zone',
+    labelColor:  '#e8d08a',
+    labelFont:   '700 14px -apple-system,"Helvetica Neue",Arial,sans-serif',
+    fillAlpha:   0.24,
+    strokeAlpha: 0.9,
+    lineWidth:   2.5,
+    pad:         20     /* keep the border clear of the fret-number row */
+  });
 
   var pcs = currentSet.notes.map(function(n) { return n.pc; });
   var noteByPc = {};
@@ -164,10 +172,12 @@ function renderFretboard() {
   positions.forEach(function(p) {
     var n = noteByPc[p.pc];
     var ivIndex = (p.pc === currentSet.root.pc) ? 0 : ((p.pc - currentSet.root.pc + 12) % 12);
-    var label = showNames ? n.name : n.interval;
+    var label    = showNames ? n.name : n.interval;
+    var sublabel = showNames ? n.interval : n.name;
     var inZone = p.fret >= zone.fretStart && p.fret <= zone.fretEnd;
-    var shade = (!dimOutOfZone || inZone) ? 0 : 0.45;
-    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, undefined, { shade: shade });
+    /* Root text is dark (no outline), so it gets a lighter dim to stay readable */
+    var shade = (!dimOutOfZone || inZone) ? 0 : (ivIndex === 0 ? 0.45 : 0.6);
+    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, sublabel, { shade: shade });
   });
 }
 
@@ -180,7 +190,14 @@ function renderChips() {
     var ivIndex = isRoot ? 0 : ((n.pc - currentSet.root.pc + 12) % 12);
     var chip = document.createElement('div');
     chip.className = 'note-chip iv-' + ivIndex + (isRoot ? ' note-chip-root' : '');
-    chip.textContent = showNames ? n.name : n.interval;
+    var primary = document.createElement('span');
+    primary.className = 'note-chip-primary';
+    primary.textContent = showNames ? n.name : n.interval;
+    var secondary = document.createElement('span');
+    secondary.className = 'note-chip-secondary';
+    secondary.textContent = showNames ? n.interval : n.name;
+    chip.appendChild(primary);
+    chip.appendChild(secondary);
     el.appendChild(chip);
   });
   document.getElementById('poolLabel').textContent = 'from ' + currentSet.pool.label;
