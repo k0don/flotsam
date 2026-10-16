@@ -145,7 +145,7 @@ function initFretboard() {
   fbCtx    = fbCanvas.getContext('2d');
   fbLayout = makeNeckLayout(fbCanvas, {
     numFrets:  13,
-    dotRadius: 20,   /* room for a two-line label (primary + sublabel) */
+    dotRadius: 22,   /* room for two 16px label lines (primary + sublabel) */
     margins:   { L:56, R:18, T:56, B:32 }
   });
 }
@@ -177,7 +177,9 @@ function renderFretboard() {
     var inZone = p.fret >= zone.fretStart && p.fret <= zone.fretEnd;
     /* Root text is dark (no outline), so it gets a lighter dim to stay readable */
     var shade = (!dimOutOfZone || inZone) ? 0 : (ivIndex === 0 ? 0.45 : 0.6);
-    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, sublabel, { shade: shade, sublabelScale: 0.72 });
+    drawNoteDot(fbCtx, fbLayout.fretX(p.fret), fbLayout.strY(p.string), fbLayout.dotRadius, ivIndex, label, sublabel, {
+      shade: shade, labelPx: 16, sublabelPx: 16, labelDy: -2  /* -2 centres the pair */
+    });
   });
 }
 

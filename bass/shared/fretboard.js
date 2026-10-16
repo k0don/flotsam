@@ -223,6 +223,9 @@ function drawNeck(ctx, layout, opts) {
  *   alpha  {number}  global opacity 0–1 (default 1); use <1 for secondary triad notes
  *   shade  {number}  0–1 darkens fill and border toward black while staying opaque (default 0)
  *   sublabelScale {number}  sublabel font size as a fraction of r (default 0.62)
+ *   labelPx       {number}  absolute main-label font size px; overrides the r-based size
+ *   sublabelPx    {number}  absolute sublabel font size px; overrides sublabelScale
+ *   labelDy       {number}  vertical shift px applied to both label lines (default 0)
  */
 function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
   opts      = opts   || {};
@@ -253,7 +256,9 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
 
   /* Labels scale with the dot radius; a dark outline keeps light text legible on brighter fills */
   var sm      = label && label.length > 1;
-  var lblPx   = Math.round(r * (sublabel ? 0.72 : (sm ? 0.75 : 0.95)));
+  var lblPx   = (opts.labelPx !== undefined) ? opts.labelPx
+              : Math.round(r * (sublabel ? 0.72 : (sm ? 0.75 : 0.95)));
+  var dy      = opts.labelDy || 0;
   var outline = !isRoot;
   ctx.textAlign   = 'center';
   ctx.fillStyle   = tx;
@@ -263,17 +268,18 @@ function drawNoteDot(ctx, x, y, r, ivIndex, label, sublabel, opts) {
 
   ctx.font         = '800 ' + lblPx + 'px ' + FB_DOT_FONT;
   ctx.textBaseline = sublabel ? 'alphabetic' : 'middle';
-  var ly = sublabel ? y : y + 0.5;
+  var ly = (sublabel ? y : y + 0.5) + dy;
   if (outline) ctx.strokeText(label || '', x, ly);
   ctx.fillText(label || '', x, ly);
 
   if (sublabel) {
     var subScale     = (opts.sublabelScale !== undefined) ? opts.sublabelScale : 0.62;
-    ctx.font         = '700 ' + Math.round(r * subScale) + 'px ' + FB_DOT_FONT;
+    var subPx        = (opts.sublabelPx !== undefined) ? opts.sublabelPx : Math.round(r * subScale);
+    ctx.font         = '700 ' + subPx + 'px ' + FB_DOT_FONT;
     ctx.textBaseline = 'top';
     ctx.globalAlpha  = (alpha < 1 ? alpha : 1) * 0.9;
-    if (outline) ctx.strokeText(sublabel, x, y + 2);
-    ctx.fillText(sublabel, x, y + 2);
+    if (outline) ctx.strokeText(sublabel, x, y + 2 + dy);
+    ctx.fillText(sublabel, x, y + 2 + dy);
   }
 
   ctx.restore();
